@@ -1,0 +1,132 @@
+create database Cleaning_Company
+use Cleaning_Company
+
+create table Rates(ID int primary key, Rate int not null, Criteria varchar(250) not null)
+create table Positions(ID int primary key, Naming varchar(50) not null, Salary int not null)
+create table Entities(ID int primary key, Naming varchar(50) not null, Square_Offices int not null, E_Address varchar(100) not null)
+create table Individuals(Passport_SN int primary key, F_Name varchar(50) not null, S_Name varchar(50), L_Name varchar(50) not null, I_Address varchar(100) not null, Room_Square int not null)
+create table C_Services(ID int primary key, Naming varchar(50) not null, Cost_m2 int not null, Popularity int)
+create table Work_Types(ID int primary key, Naming varchar(100) not null)
+create table Work_Spec(ID int primary key, W_Date date not null, W_Time time not null)
+create table Employees(Passport_SN int primary key, ID_Positions int references Positions(ID), F_Name varchar(50) not null, S_Name varchar(50), L_Name varchar(50) not null, Salary int, Date_Birth date not null, Date_hire date not null)
+create table Orders(Number int primary key, ID_Work_Spec int references Work_Spec(ID), O_Date date not null)
+create table Register(Passport_SN_Employees int references Employees(Passport_SN), ID_Rates int references Rates(ID), Number_Orders int references Orders(Number), W_date date not null)
+create table Contracts(Number int primary key, Passport_SN_Individuals int references Individuals(Passport_SN), ID_Entities int references Entities(ID), Number_Orders int references Orders(Number), C_Name varchar(100) not null, Sign_Date date not null, Date_Start date, Date_End date)
+create table Employees_Individuals(Passport_SN_Employees int references Employees(Passport_SN), Passport_SN_Individuals int references Individuals(Passport_SN))
+create table Employees_Entities(Passport_SN_Employees int references Employees(Passport_SN), ID_Entities int references Entities(ID))
+create table Contracts_C_Services(Number_Contracts int references Contracts(Number), ID_C_Services int references C_Services(ID))
+create table Work_Spec_Work_Types(ID_Work_Spec int references Work_Spec(ID), ID_Work_Types int references Work_Types(ID))
+
+CREATE TRIGGER ADDSALARY 
+   ON  [Employees] 
+   INSTEAD OF INSERT
+AS 
+   DECLARE @ID_S INT
+BEGIN
+	INSERT INTO [Employees] ([Passport_SN], [ID_Positions], [F_Name], [S_Name], [L_Name], [Date_Birth], [Date_hire])
+	(SELECT [Passport_SN], [ID_Positions], [F_Name], [S_Name], [L_Name], [Date_Birth], [Date_hire] FROM inserted)
+	SET @ID_S = (SELECT [ID_Positions] FROM inserted)
+	UPDATE [Employees]
+	SET [Salary] = (SELECT [Salary] FROM [Positions] WHERE ID = @ID_S GROUP BY (Salary))
+	WHERE ID_Positions = @ID_S
+END
+GO
+
+CREATE TRIGGER ADDSALARY_UPDATE
+   ON  [Employees] 
+   AFTER UPDATE
+AS 
+   DECLARE @ID_S INT
+IF UPDATE ([ID_Positions])
+BEGIN
+	SET @ID_S = (SELECT [ID_Positions] FROM inserted)
+	UPDATE [Employees]
+	SET [Salary] = (SELECT [Salary] FROM [Positions] WHERE ID = @ID_S GROUP BY (Salary))
+	WHERE ID_Positions = @ID_S
+END
+GO
+
+CREATE TRIGGER CHECKDATE
+ON [Orders]
+   INSTEAD OF INSERT
+AS 
+	DECLARE @NUM_O INT
+	SET @NUM_O = (SELECT [Number] FROM inserted)
+	IF EXISTS (SELECT * FROM inserted WHERE [O_Date] > GETDATE())
+BEGIN
+	RAISERROR ('WRONG ORDER DATE', 1, 1)
+	RETURN
+END
+	ELSE
+	INSERT INTO [Orders] ([ID_Work_Spec], [Number], [O_Date])
+	(SELECT [ID_Work_Spec], [Number], [O_Date] FROM inserted)
+GO
+
+CREATE TRIGGER CHECKDATE_UPDATE
+	ON [Orders]
+   	AFTER UPDATE
+AS 
+	DECLARE @OLD DATE
+	DECLARE @NEW DATE
+	DECLARE @NUM_O INT;
+BEGIN
+	SET @NUM_O = (SELECT [Number] FROM inserted)
+	SET @OLD = (SELECT [O_Date] FROM deleted)
+	SET @NEW = (SELECT [O_Date] FROM inserted)
+	IF @OLD <> @NEW
+	IF EXISTS (SELECT * FROM inserted WHERE [O_Date] > GETDATE())
+BEGIN
+	RAISERROR ('WRONG ORDER DATE', 1, 1)
+	RETURN
+END
+	ELSE
+	UPDATE [Orders] 
+	SET [O_Date] = (SELECT [O_Date] FROM inserted)
+END
+
+CREATE TRIGGER ENT_DEL 
+	ON [Entities]
+	INSTEAD OF DELETE
+AS
+     
+BEGIN
+	DELETE FROM Work_Spec_Work_Types WHERE ID_Work_Spec = (SELECT ID FROM Work_Spec WHERE ID = (SELECT ID_Work_Spec FROM Orders WHERE Number = (SELECT Number_Orders FROM Contracts WHERE ID_Entities = (SELECT ID FROM deleted))))
+	DELETE FROM Register WHERE Number_Orders = (SELECT Number FROM Orders WHERE Number = (SELECT Number_Orders FROM Contracts WHERE ID_Entities = (SELECT ID FROM deleted)))
+	DELETE FROM Contracts_C_Services WHERE Number_Contracts = (SELECT NUMBER FROM Contracts WHERE ID_Entities = (SELECT ID FROM deleted))
+	DELETE FROM Contracts WHERE ID_Entities = (SELECT ID FROM deleted)
+	DELETE FROM Orders WHERE Number = (SELECT Number_Orders FROM Contracts WHERE ID_Entities = (SELECT ID FROM deleted))
+	DELETE FROM Work_Spec WHERE ID = (SELECT ID_Work_Spec FROM Orders WHERE Number = (SELECT Number_Orders FROM Contracts WHERE ID_Entities = (SELECT ID FROM deleted)))
+	DELETE FROM Employees_Entities WHERE ID_Entities = (SELECT ID FROM deleted)
+	DELETE FROM Entities WHERE ID = (SELECT ID FROM deleted)
+END
+GO
+
+CREATE TRIGGER SERVICECOUNT 
+   ON  [Contracts_C_Services] 
+   AFTER INSERT, UPDATE
+AS 
+   DECLARE @ID_S INT
+BEGIN
+	SET @ID_S = (SELECT [ID_C_Services] FROM inserted)
+	UPDATE [C_Services]
+	SET [Popularity] = (SELECT COUNT(Number_Contracts) FROM [Contracts_C_Services] WHERE ID_C_Services = @ID_S GROUP BY (ID_C_Services))
+	WHERE ID = @ID_S
+	SET @ID_S = (SELECT [ID_C_Services] FROM deleted)
+	UPDATE [C_Services]
+	SET [Popularity] = (SELECT COUNT(Number_Contracts) FROM [Contracts_C_Services] WHERE ID_C_Services = @ID_S GROUP BY (ID_C_Services))
+	WHERE ID = @ID_S
+END
+GO
+
+CREATE TRIGGER SERVICECOUNT_DEL 
+	ON [Contracts_C_Services]
+	AFTER DELETE
+AS
+     DECLARE @ID_S INT;
+BEGIN
+    SET @ID_S = (SELECT [ID_C_Services] FROM deleted)
+    UPDATE [C_Services]
+    SET [Popularity] = (SELECT COUNT(Number_Contracts) FROM [Contracts_C_Services] WHERE ID_C_Services = @ID_S)
+     WHERE ID = @ID_S
+END
+GO
