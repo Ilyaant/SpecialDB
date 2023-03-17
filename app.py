@@ -13,6 +13,7 @@ def admin_window():
          sg.Button('Просмотреть договоры')],
         [sg.Button('Добавить сотрудника'), sg.Push(),
          sg.Button('Просмотреть заказы')],
+        [sg.Button('Назначить сотрудника')]
         [sg.Push(), sg.Button('Закрыть')]
     ]
     return sg.Window('Клининговая компания. Администратор', layout_admin)
@@ -237,12 +238,26 @@ def admin_list_orders():
     window.close()
 
 
+def admin_assign_worker():
+    # TODO
+    return 0
+
+
 # Функция для вывода окна пользователя
 def user_window():
     layout_user = [
-        [sg.Text('User')]
+        [sg.Button('Заявка на физическое лицо')],
+        [sg.Button('Заявка на юридическое лицо')],
+        [sg.Button('Оставить отзыв')],
+        [sg.Push(), sg.Button('Закрыть')]
     ]
     return sg.Window('Клининговая компания. Пользователь', layout_user)
+
+
+def user_create_order_ind():
+    layout = [
+
+    ]
 
 
 # Функция для вывода окна сотрудника
@@ -299,6 +314,8 @@ while True:
                     admin_list_contracts()
                 if event_a == 'Просмотреть заказы':
                     admin_list_orders()
+                if event_a == 'Назначить сотрудника':
+                    admin_assign_worker()
             window_admin.close()
 
         # запуск окна пользователя (проверка логина и пароля user)
@@ -306,7 +323,7 @@ while True:
             window_user = user_window()
             while True:
                 event_u, values_u = window_user.read()
-                if event_u == sg.WINDOW_CLOSED:
+                if event_u == sg.WINDOW_CLOSED or event_u == 'Закрыть':
                     break
             window_user.close()
 
@@ -315,7 +332,7 @@ while True:
             window_worker = worker_window()
             while True:
                 event_w, values_w = window_worker.read()
-                if event_w == sg.WINDOW_CLOSED:
+                if event_w == sg.WINDOW_CLOSED or event_w == 'Закрыть':
                     break
             window_worker.close()
 
