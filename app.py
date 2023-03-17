@@ -5,11 +5,14 @@ import sqlite3
 # Функция для вывода окна админа
 def admin_window():
     layout_admin = [
-        [sg.Button('Добавить услугу'), sg.Button('Добавить тип работ')],
-        [sg.Button('Добавить должность'), sg.Button('Добавить сотрудника')],
-        [sg.Button('Просмотреть клиентов'),
+        [sg.Button('Добавить услугу'), sg.Push(),
+         sg.Button('Просмотреть клиентов')],
+        [sg.Button('Добавить тип работ'), sg.Push(),
          sg.Button('Просмотреть сотрудников')],
-        [sg.Button('Просмотреть договоры'), sg.Button('Просмотреть заказы')],
+        [sg.Button('Добавить должность'), sg.Push(),
+         sg.Button('Просмотреть договоры')],
+        [sg.Button('Добавить сотрудника'), sg.Push(),
+         sg.Button('Просмотреть заказы')],
         [sg.Push(), sg.Button('Закрыть')]
     ]
     return sg.Window('Клининговая компания. Администратор', layout_admin)
@@ -150,6 +153,90 @@ def admin_add_worker():
     window.close()
 
 
+def admin_list_clients():
+    layout = [
+        [sg.Text('Физические лица:')],
+        [sg.Multiline(key='-IND-', size=(50, 5))],
+        [sg.Text('Юридические лица:')],
+        [sg.Multiline(key='-ENT-', size=(50, 5))]
+        [sg.Push(), sg.Button('Закрыть')]
+    ]
+
+    window = sg.Window('Просмотреть клиентов', layout)
+    while True:
+        event, values = window.read()
+        if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
+            break
+        conn = sqlite3.connect('Cleaning_Company.db')
+        c = conn.cursor()
+        c.execute('SELECT * FROM Individuals')
+        window['-IND-'].update(c.fetchall())
+        c.execute('SELECT * FROM Entities')
+        window['-ENT-'].update(c.fetchall())
+        conn.close()
+    window.close()
+
+
+def admin_list_workers():
+    layout = [
+        [sg.Text('Сотрудники:')],
+        [sg.Multiline(key='-EMP-', size=(50, 5))],
+        [sg.Push(), sg.Button('Закрыть')]
+    ]
+
+    window = sg.Window('Просмотреть сотрудников', layout)
+    while True:
+        event, values = window.read()
+        if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
+            break
+        conn = sqlite3.connect('Cleaning_Company.db')
+        c = conn.cursor()
+        c.execute('SELECT * FROM Employees')
+        window['-EMP-'].update(c.fetchall())
+        conn.close()
+    window.close()
+
+
+def admin_list_contracts():
+    layout = [
+        [sg.Text('Договоры:')],
+        [sg.Multiline(key='-CON-', size=(50, 5))],
+        [sg.Push(), sg.Button('Закрыть')]
+    ]
+
+    window = sg.Window('Просмотреть договоры', layout)
+    while True:
+        event, values = window.read()
+        if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
+            break
+        conn = sqlite3.connect('Cleaning_Company.db')
+        c = conn.cursor()
+        c.execute('SELECT * FROM Contracts')
+        window['-CON-'].update(c.fetchall())
+        conn.close()
+    window.close()
+
+
+def admin_list_orders():
+    layout = [
+        [sg.Text('Заказы:')],
+        [sg.Multiline(key='-ORD-', size=(50, 5))],
+        [sg.Push(), sg.Button('Закрыть')]
+    ]
+
+    window = sg.Window('Просмотреть заказы', layout)
+    while True:
+        event, values = window.read()
+        if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
+            break
+        conn = sqlite3.connect('Cleaning_Company.db')
+        c = conn.cursor()
+        c.execute('SELECT * FROM Orders')
+        window['-ORD-'].update(c.fetchall())
+        conn.close()
+    window.close()
+
+
 # Функция для вывода окна пользователя
 def user_window():
     layout_user = [
@@ -204,6 +291,14 @@ while True:
                     admin_add_position()
                 if event_a == 'Добавить сотрудника':
                     admin_add_worker()
+                if event_a == 'Просмотреть клиентов':
+                    admin_list_clients()
+                if event_a == 'Просмотреть сотрудников':
+                    admin_list_workers()
+                if event_a == 'Просмотреть договоры':
+                    admin_list_contracts()
+                if event_a == 'Просмотреть заказы':
+                    admin_list_orders()
             window_admin.close()
 
         # запуск окна пользователя (проверка логина и пароля user)
