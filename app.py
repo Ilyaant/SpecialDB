@@ -13,7 +13,7 @@ def admin_window():
          sg.Button('Просмотреть договоры')],
         [sg.Button('Добавить сотрудника'), sg.Push(),
          sg.Button('Просмотреть заказы')],
-        [sg.Button('Назначить сотрудника')]
+        [sg.Button('Назначить сотрудника')],
         [sg.Push(), sg.Button('Закрыть')]
     ]
     return sg.Window('Клининговая компания. Администратор', layout_admin)
@@ -159,7 +159,7 @@ def admin_list_clients():
         [sg.Text('Физические лица:')],
         [sg.Multiline(key='-IND-', size=(50, 5))],
         [sg.Text('Юридические лица:')],
-        [sg.Multiline(key='-ENT-', size=(50, 5))]
+        [sg.Multiline(key='-ENT-', size=(50, 5))],
         [sg.Push(), sg.Button('Закрыть')]
     ]
 
@@ -260,6 +260,36 @@ def user_create_order_ind():
     ]
 
 
+def user_create_order_ent():
+    layout = [
+
+    ]
+
+
+def user_give_feedback():
+    layout = [
+        [sg.Text('Номер заказа:')],
+        [sg.InputText(key='-ORDNUM-')],
+        [sg.Text(
+            'Оцените услуги от 1 до 5, где 1 - очень плохо, 5 - очень хорошо')],
+        [sg.Text('Качество работ:'), sg.Combo(
+            ['5', '4', '3', '2', '1'], key='-CR1-', default_value='5')],
+        [sg.Text('Комментарий:')],
+        [sg.Multiline(key='-COMM-', size=(50, 5))],
+        [sg.Button('Оставить отзыв'), sg.Push(), sg.Button('Отмена')]
+    ]
+
+    window = sg.Window('Оставить отзыв', layout)
+    while True:
+        event, values = window.read()
+        if event == 'Отмена' or event == sg.WINDOW_CLOSED:
+            break
+
+        if event == 'Оставить отзыв':
+            pass
+    window.close()
+
+
 # Функция для вывода окна сотрудника
 def worker_window():
     layout_worker = [
@@ -325,6 +355,12 @@ while True:
                 event_u, values_u = window_user.read()
                 if event_u == sg.WINDOW_CLOSED or event_u == 'Закрыть':
                     break
+                if event_u == 'Заявка на физическое лицо':
+                    user_create_order_ind()
+                if event_u == 'Заявка на юридическое лицо':
+                    user_create_order_ent()
+                if event_u == 'Оставить отзыв':
+                    user_give_feedback()
             window_user.close()
 
         # запуск окна работника (проверка логина и пароля worker)
