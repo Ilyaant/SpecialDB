@@ -1,5 +1,8 @@
 import PySimpleGUI as sg
 import sqlite3
+import pickledb
+
+rdb = pickledb.load('rates.db', False)
 
 
 # Функция для вывода окна админа
@@ -286,7 +289,10 @@ def user_give_feedback():
             break
 
         if event == 'Оставить отзыв':
-            pass
+            rdb.set(values['-ORDNUM-'], [values['-CR1-'], values['-COMM-']])
+            rdb.dump()
+            break
+
     window.close()
 
 
