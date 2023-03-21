@@ -5,6 +5,8 @@ import pickledb
 rdb = pickledb.load('rates.db', False)
 udb = pickledb.load('users.db', False)
 
+######################################## ADMIN ######################################################
+
 
 # Функция для вывода окна админа
 def admin_window():
@@ -18,7 +20,7 @@ def admin_window():
         [sg.Button('Добавить сотрудника'), sg.Push(),
          sg.Button('Просмотреть заказы')],
         [sg.Button('Назначить сотрудника')],
-        [sg.Push(), sg.Button('Закрыть')]
+        [sg.Push(), sg.Button('Выйти')]
     ]
     return sg.Window('Клининговая компания. Администратор', layout_admin)
 
@@ -154,6 +156,8 @@ def admin_add_worker():
                     'INSERT INTO Employees (Passport_SN, ID_Positions, F_Name, S_Name, L_Name, Date_Birth, Date_hire) VALUES (?,?,?,?,?,?,?)', worker)
                 conn.commit()
                 conn.close()
+                udb.set(values['-WSN-'], [values['-WLNAME-'], 'wrk'])
+                udb.dump()
                 break
     window.close()
 
@@ -245,6 +249,8 @@ def admin_list_orders():
 def admin_assign_worker():
     # TODO
     return 0
+
+######################################## USER ######################################################
 
 
 # Функция для регистрации физлица
@@ -379,12 +385,16 @@ def user_give_feedback():
     window.close()
 
 
+######################################## WORKER ######################################################
+
 # Функция для вывода окна сотрудника
 def worker_window():
     layout_worker = [
-        [sg.Text('Worker')]
+        [sg.Text('Мои назначения:')],
+        [sg.Multiline(key='-ASSIGN-', size=(50, 5))],
+        [sg.Push(), sg.Button('Выйти')]
     ]
-    return sg.Window('Клининговая компания. Пользователь', layout_worker)
+    return sg.Window('Клининговая компания. Сотрудник', layout_worker)
 
 
 sg.theme('sandy beach')  # цветовая тема приложения
@@ -426,7 +436,7 @@ while True:
             window_admin = admin_window()
             while True:
                 event_a, values_a = window_admin.read()
-                if event_a == sg.WINDOW_CLOSED or event_a == 'Закрыть':
+                if event_a == sg.WINDOW_CLOSED or event_a == 'Выйти':
                     break
                 if event_a == 'Добавить услугу':
                     admin_add_service()
@@ -468,9 +478,18 @@ while True:
             window_worker = worker_window()
             while True:
                 event_w, values_w = window_worker.read()
-                if event_w == sg.WINDOW_CLOSED or event_w == 'Закрыть':
+                if event_w == sg.WINDOW_CLOSED or event_w == 'Выйти':
                     break
             window_worker.close()
+
+        elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'ind':
+            pass
+
+        elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'ent':
+            pass
+
+        elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'wrk':
+            pass
 
         # обработка ошибки ввода неизвестного логина и пароля
         else:
