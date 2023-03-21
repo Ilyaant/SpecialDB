@@ -394,7 +394,13 @@ def worker_window():
         [sg.Multiline(key='-ASSIGN-', size=(50, 5))],
         [sg.Push(), sg.Button('Выйти')]
     ]
-    return sg.Window('Клининговая компания. Сотрудник', layout_worker)
+
+    window = sg.Window('Клининговая компания. Сотрудник', layout_worker)
+    while True:
+        event, values = window_worker.read()
+        if event == sg.WINDOW_CLOSED or event == 'Выйти':
+            break
+    window.close()
 
 
 sg.theme('sandy beach')  # цветовая тема приложения
@@ -489,7 +495,7 @@ while True:
             pass
 
         elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'wrk':
-            pass
+            worker_window()
 
         # обработка ошибки ввода неизвестного логина и пароля
         else:
