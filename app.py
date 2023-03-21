@@ -3,6 +3,7 @@ import sqlite3
 import pickledb
 
 rdb = pickledb.load('rates.db', False)
+udb = pickledb.load('users.db', False)
 
 
 # Функция для вывода окна админа
@@ -246,6 +247,88 @@ def admin_assign_worker():
     return 0
 
 
+# Функция для регистрации физлица
+def register_ind():
+    layout = [
+        [sg.Text('Логин:'), sg.InputText(key='-LOGIN-')],
+        [sg.Text('Пароль:'), sg.InputText(key='-PASSIN-', password_char='*')],
+        [sg.Text('Серия и номер паспорта:'), sg.InputText(key='-PASSPORTSN-')],
+        [sg.Text('Фамилия:'), sg.InputText(key='-LNAME-')],
+        [sg.Text('Имя:'), sg.InputText(key='-FNAME-')],
+        [sg.Text('Отчество:'), sg.InputText(key='-SNAME-')],
+        [sg.Text('Адрес:'), sg.InputText(key='-ADDIN-')],
+        [sg.Text('Площадь помещения (кв. м):'), sg.InputText(key='-SQIN-')],
+        [sg.Button('Зарегистрироваться'), sg.Push(), sg.Button('Отмена')],
+    ]
+
+    window = sg.window('Регистрация физического лица', layout)
+    while True:
+        event, values = window.read()
+        if event == sg.WINDOW_CLOSED or event == 'Отмена':
+            break
+        if event == 'Зарегистрироваться':
+            try:
+                ind = (
+                    int(values['-PASSPORTSN-']),
+                    str(values['-FNAME-']),
+                    str(values['-SNAME-']),
+                    str(values['-LNAME-']),
+                    str(values['-ADDIN-']),
+                    int(values['-SQIN-'])
+                )
+            except:
+                sg.Popup('Ошибка. Проверьте введенные данные', title='Ошибка')
+            else:
+                conn = sqlite3.connect('Cleaning_Company.db')
+                c = conn.cursor()
+                c.execute(
+                    '''insert into Individuals (Passport_SN, F_Name, S_Name, L_Name, I_Address, Room_Square) values (?,?,?,?,?,?)''', ind)
+                conn.commit()
+                conn.close()
+                udb.set(values['-LOGIN-'], [values['-PASSIN-'],
+                        int(values['-PASSPORTSN-']), 'ind'])
+                udb.dump()
+                break
+
+
+# Функция для регистрации юрлица
+def register_ent():
+    layout = [
+        [sg.Text('Логин:'), sg.InputText(key='-LOGIN-')],
+        [sg.Text('Пароль:'), sg.InputText(key='-PASSIN-', password_char='*')],
+        [sg.Text('Название организации:'), sg.InputText(key='-ENTNAME-')],
+        [sg.Text('Адрес:'), sg.InputText(key='-ADDENT-')],
+        [sg.Text('Площадь помещений (кв. м):'), sg.InputText(key='-SQENT-')],
+        [sg.Button('Зарегистрироваться'), sg.Push(), sg.Button('Отмена')],
+    ]
+
+    window = sg.window('Регистрация юридического лица', layout)
+    while True:
+        event, values = window.read()
+        if event == sg.WINDOW_CLOSED or event == 'Отмена':
+            break
+        if event == 'Зарегистрироваться':
+            try:
+                ent = (
+                    str(values['-ENTNAME-']),
+                    str(values['-ADDENT-']),
+                    int(values['-SQENT-'])
+                )
+            except:
+                sg.Popup('Ошибка. Проверьте введенные данные', title='Ошибка')
+            else:
+                conn = sqlite3.connect('Cleaning_Company.db')
+                c = conn.cursor()
+                c.execute(
+                    '''insert into Entities (Naming, Square_Offices, E_Address) values (?,?,?)''', ent)
+                conn.commit()
+                conn.close()
+                udb.set(values['-LOGIN-'], [values['-PASSIN-'],
+                        str(values['-ENTNAME-']), 'ent'])
+                udb.dump()
+                break
+
+
 # Функция для вывода окна пользователя
 def user_window():
     layout_user = [
@@ -311,7 +394,10 @@ layout = [
     [sg.Text('Пожалуйста, выполните вход')],
     [sg.Text('Логин:'), sg.InputText(key='-LOGIN-')],
     [sg.Text('Пароль:'), sg.InputText(key='-PASS-', password_char='*')],
-    [sg.Button('Войти'), sg.Push(), sg.Button('Выход')]
+    [sg.Push(), sg.Button('Войти'), sg.Push()],
+    [sg.Push(), sg.Button('Регистрация физ. лица'),
+     sg.Button('Регистрация юр. лица'), sg.Push()],
+    [sg.Push(), sg.Button('Выход')]
 ]
 
 window = sg.Window('Клининговая компания. Вход',
@@ -323,6 +409,14 @@ while True:
     # обработка события выхода из приложения
     if event == sg.WINDOW_CLOSED or event == 'Выход':
         break
+
+    # обработка события нажатия на кнопку "Регистрация физ. лица"
+    if event == 'Регистрация физ. лица':
+        register_ind()
+
+    # обработка события нажатия на кнопку "Регистрация юр. лица"
+    if event == 'Регистрация юр. лица':
+        register_ent()
 
     # обработка события нажатия на кнопку "Войти"
     if event == 'Войти':
