@@ -1,9 +1,11 @@
 import PySimpleGUI as sg
 import sqlite3
 import pickledb
+from tinydb import TinyDB
 
 rdb = pickledb.load('rates.db', False)
 udb = pickledb.load('users.db', False)
+ord_db = TinyDB('orders.db')
 
 ######################################## ADMIN ######################################################
 
@@ -125,10 +127,10 @@ def admin_add_worker():
         [sg.InputText(key='-WLNAME-')],
         [sg.Text('Дата рождения:')],
         [sg.InputText(key='-WBDATE-'), sg.CalendarButton('Выбрать дату',
-                                                         close_when_date_chosen=True, target='-WBDATE-', format='%Y:%m:%d')],
+                                                         close_when_date_chosen=True, target='-WBDATE-', format='%Y-%m-%d')],
         [sg.Text('Дата приема на работу:')],
         [sg.InputText(key='-WHDATE-'), sg.CalendarButton('Выбрать дату',
-                                                         close_when_date_chosen=True, target='-WHDATE-', format='%Y:%m:%d')],
+                                                         close_when_date_chosen=True, target='-WHDATE-', format='%Y-%m-%d')],
         [sg.Button('Добавить'), sg.Push(), sg.Button('Отмена')]
     ]
 
@@ -408,8 +410,8 @@ sg.theme('sandy beach')  # цветовая тема приложения
 # интерфейс главного окна
 layout = [
     [sg.Text('Пожалуйста, выполните вход')],
-    [sg.Text('Логин:'), sg.InputText(key='-LOGIN-')],
-    [sg.Text('Пароль:'), sg.InputText(key='-PASS-', password_char='*')],
+    [sg.Push(), sg.Text('Логин:'), sg.InputText(key='-LOGIN-')],
+    [sg.Push(), sg.Text('Пароль:'), sg.InputText(key='-PASS-', password_char='*')],
     [sg.Push(), sg.Button('Войти'), sg.Push()],
     [sg.Push(), sg.Button('Регистрация физ. лица'),
      sg.Button('Регистрация юр. лица'), sg.Push()],
