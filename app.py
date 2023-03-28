@@ -348,10 +348,38 @@ def user_window():
     return sg.Window('Клининговая компания. Пользователь', layout_user)
 
 
-def user_create_order_ind():
+def user_create_order_ind(login):
     layout = [
-
+        [sg.Text('Доступные услуги и их цена за кв. м или шт.:')],
+        [sg.Multiline(key='-SERV-', size=(50, 5))],
+        [sg.Text('Выберите до 3-х услуг для заказа:')],
+        [sg.Push(), sg.Text('Услуга 1:'), sg.InputText(key='-S1-'), sg.InputText(key='-D1-'), sg.CalendarButton('Выбрать дату',
+                                                                                                                close_when_date_chosen=True, target='-D1-', format='%Y-%m-%d'), sg.Text('Время (чч:мм:сс):'), sg.InputText(key='-T1-')],
+        [sg.Push(), sg.Text('Услуга 2:'), sg.InputText(key='-S2-'), sg.InputText(key='-D2-'), sg.CalendarButton('Выбрать дату',
+                                                                                                                close_when_date_chosen=True, target='-D2-', format='%Y-%m-%d'), sg.Text('Время (чч:мм:сс):'), sg.InputText(key='-T2-')],
+        [sg.Push(), sg.Text('Услуга 3:'), sg.InputText(key='-S3-'), sg.InputText(key='-D3-'), sg.CalendarButton('Выбрать дату',
+                                                                                                                close_when_date_chosen=True, target='-D3-', format='%Y-%m-%d'), sg.Text('Время (чч:мм:сс):'), sg.InputText(key='-T3-')],
+        [sg.Button('Создать заказ'), sg.Push(), sg.Button('Отмена')]
     ]
+
+    window = sg.Window('Создать заказ', layout)
+    while True:
+        event, values = window.read()
+        if event == 'Отмена' or event == sg.WINDOW_CLOSED:
+            break
+
+        conn = sqlite3.connect('Cleaning_Company.db')
+        c = conn.cursor()
+        c.execute('SELECT * FROM C_Services')
+        window['-SERV-'].update(c.fetchall())
+        conn.close()
+
+        if event == 'Создать заказ':
+            rdb.set(values['-ORDNUM-'], [values['-CR1-'], values['-COMM-']])
+            rdb.dump()
+            break
+
+    window.close()
 
 
 def user_create_order_ent():
