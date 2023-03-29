@@ -340,8 +340,8 @@ def register_ent():
 # Функция для вывода окна пользователя
 def user_window():
     layout_user = [
-        [sg.Button('Заявка на физическое лицо')],
-        [sg.Button('Заявка на юридическое лицо')],
+        [sg.Button('Создать заявку')],
+        [sg.Button('Просмотреть мои заявки')],
         [sg.Button('Оставить отзыв')],
         [sg.Push(), sg.Button('Закрыть')]
     ]
@@ -427,7 +427,7 @@ def worker_window():
 
     window = sg.Window('Клининговая компания. Сотрудник', layout_worker)
     while True:
-        event, values = window_worker.read()
+        event, values = window.read()
         if event == sg.WINDOW_CLOSED or event == 'Выйти':
             break
     window.close()
@@ -494,35 +494,33 @@ while True:
                     admin_assign_worker()
             window_admin.close()
 
-        # запуск окна пользователя (проверка логина и пароля user)
-        elif values['-LOGIN-'] == 'user' and values['-PASS-'] == 'user':
+        elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'ind':
             window_user = user_window()
             while True:
                 event_u, values_u = window_user.read()
                 if event_u == sg.WINDOW_CLOSED or event_u == 'Закрыть':
                     break
-                if event_u == 'Заявка на физическое лицо':
-                    user_create_order_ind()
-                if event_u == 'Заявка на юридическое лицо':
-                    user_create_order_ent()
+                if event_u == 'Создать заявку':
+                    user_create_order_ind(values['-LOGIN-'])
+                if event_u == 'Просмотреть мои заявки':
+                    pass
                 if event_u == 'Оставить отзыв':
                     user_give_feedback()
             window_user.close()
 
-        # запуск окна работника (проверка логина и пароля worker)
-        elif values['-LOGIN-'] == 'worker' and values['-PASS-'] == 'worker':
-            window_worker = worker_window()
-            while True:
-                event_w, values_w = window_worker.read()
-                if event_w == sg.WINDOW_CLOSED or event_w == 'Выйти':
-                    break
-            window_worker.close()
-
-        elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'ind':
-            pass
-
         elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'ent':
-            pass
+            window_user = user_window()
+            while True:
+                event_u, values_u = window_user.read()
+                if event_u == sg.WINDOW_CLOSED or event_u == 'Закрыть':
+                    break
+                if event_u == 'Создать заявку':
+                    user_create_order_ent()
+                if event_u == 'Просмотреть мои заявки':
+                    pass
+                if event_u == 'Оставить отзыв':
+                    user_give_feedback()
+            window_user.close()
 
         elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'wrk':
             worker_window()
