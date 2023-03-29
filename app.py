@@ -410,6 +410,8 @@ def user_create_order_ind(login):
                 c.execute(
                     'SELECT Number FROM Contracts WHERE Number_Orders=?', (id_order,))
                 id_contract = c.fetchone()[0]
+                c.execute(
+                    'insert into Contracts_C_Services (Number_Contracts, ID_C_Services) values (?,?)', (id_contract, ))
                 conn.commit()
                 conn.close()
                 if values['-S2-'] and values['-D2-'] and values['-T2-']:
