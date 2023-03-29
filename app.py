@@ -2,6 +2,7 @@ import PySimpleGUI as sg
 import sqlite3
 import pickledb
 from tinydb import TinyDB
+from datetime import date
 
 rdb = pickledb.load('rates.db', False)
 udb = pickledb.load('users.db', False)
@@ -375,9 +376,50 @@ def user_create_order_ind(login):
         conn.close()
 
         if event == 'Создать заказ':
-            rdb.set(values['-ORDNUM-'], [values['-CR1-'], values['-COMM-']])
-            rdb.dump()
-            break
+            cost = 0
+            id_work_spec = None
+            id_order = None
+            id_contract = None
+            if values['-S1-'] and values['-D1-'] and values['-T1-']:
+                c = conn.cursor()
+                c.execute('INSERT INTO Work_Spec (W_Date, W_Time) values (?,?)',
+                          (values['-D1-'], values['-T1-']))
+                c.execute('SELECT ID FROM Work_Spec WHERE W_Date=? AND W_Time=?',
+                          (values['-D1-'], values['-T1-']))
+                id_work_spec = c.fetchone()[0]
+                c.execute('SELECT ID FROM Work_Types WHERE Naming=?',
+                          (values['-S1-'],))
+                id_work_type = c.fetchone()[0]
+                c.execute('INSERT INTO Work_Spec_Work_Types (ID_Work_Spec, ID_Work_Types) values (?,?)',
+                          (id_work_spec, id_work_type))
+                c.execute('INSERT INTO Orders (ID_Work_Spec, O_Date) values (?,?)',
+                          (id_work_spec, str(date.today())))
+                c.execute(
+                    'SELECT ID FROM Orders WHERE ID_Work_Spec=?', (id_work_spec,))
+                id_order = c.fetchone()[0]
+                contract = (
+                    udb.get(login)[1],
+                    'Договор оказания услуг',
+                    str(date.today()),
+                    id_order,
+                    str(date.today()),  # TODO
+                    str(date.today())  # TODO
+                )
+                c.execute(
+                    'INSERT INTO Contracts (Passport_SN_Individuals, C_Name, Sign_Date, Number_Orders, Date_Start, Date_End) values (?,?,?,?,?,?)', contract)
+                c.execute(
+                    'SELECT Number FROM Contracts WHERE Number_Orders=?', (id_order,))
+                id_contract = c.fetchone()[0]
+                conn.commit()
+                conn.close()
+                if values['-S2-'] and values['-D2-'] and values['-T2-']:
+                    pass
+                if values['-S3-'] and values['-D3-'] and values['-T3-']:
+                    pass
+                sg.Popup(
+                    f'Заказ создан успешно!\nНомер заказа: {id_order}\nНомер договора: {id_contract}\nСтоимость услуг: {cost}', title='Успешно')
+            else:
+                sg.Popup('Ошибка. Проверьте введенные данные', title='Ошибка')
 
     window.close()
 
