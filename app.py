@@ -729,7 +729,7 @@ while True:
                 if event_u == sg.WINDOW_CLOSED or event_u == 'Закрыть':
                     break
                 if event_u == 'Создать заявку':
-                    user_create_order_ent()
+                    user_create_order_ent(values['-LOGIN-'])
                 if event_u == 'Просмотреть мои заявки':
                     pass
                 if event_u == 'Оставить отзыв':
