@@ -53,6 +53,8 @@ def admin_add_service():
                 c = conn.cursor()
                 c.execute(
                     'INSERT INTO C_Services (Naming, Cost_m2, Popularity) VALUES (?,?,?)', serv)
+                c.execute('INSERT INTO Work_Types (Naming) values (?)',
+                          (values['-SNAME-'],))
                 conn.commit()
                 conn.close()
                 break
@@ -360,6 +362,7 @@ def user_create_order_ind(login):
                                                                                                                 close_when_date_chosen=True, target='-D2-', format='%Y-%m-%d'), sg.Text('Время (чч:мм:сс):'), sg.InputText(key='-T2-')],
         [sg.Push(), sg.Text('Услуга 3:'), sg.InputText(key='-S3-'), sg.InputText(key='-D3-'), sg.CalendarButton('Выбрать дату',
                                                                                                                 close_when_date_chosen=True, target='-D3-', format='%Y-%m-%d'), sg.Text('Время (чч:мм:сс):'), sg.InputText(key='-T3-')],
+        [sg.Text('Стоимость услуг:'), sg.Text('0', key='-COST-')],
         [sg.Button('Создать заказ'), sg.Push(), sg.Button('Отмена')]
     ]
 
@@ -410,14 +413,60 @@ def user_create_order_ind(login):
                 c.execute(
                     'SELECT Number FROM Contracts WHERE Number_Orders=?', (id_order,))
                 id_contract = c.fetchone()[0]
+                c.execute('SELECT ID FROM C_Services WHERE Naming=?',
+                          (values['-S1-'],))
+                id_serv = c.fetchone()[0]
                 c.execute(
-                    'insert into Contracts_C_Services (Number_Contracts, ID_C_Services) values (?,?)', (id_contract, ))
+                    'insert into Contracts_C_Services (Number_Contracts, ID_C_Services) values (?,?)', (id_contract, id_serv))
+                c.execute(
+                    'SELECT Room_Square FROM Individuals WHERE Passport_SN=?', (udb.get(login)[1],))
+                square = int(c.fetchone()[0])
+                c.execute(
+                    'SELECT Cost_m2 FROM C_Services WHERE Naming=?', (values['-S1-'],))
+                cost += square * int(c.fetchone()[0])
+                window['-COST-'].update(cost)
                 conn.commit()
                 conn.close()
                 if values['-S2-'] and values['-D2-'] and values['-T2-']:
-                    pass
+                    c = conn.cursor()
+                    c.execute('INSERT INTO Work_Spec (ID, W_Date, W_Time) values (?,?,?)',
+                              (id_work_spec, values['-D2-'], values['-T2-']))
+                    c.execute('SELECT ID FROM Work_Types WHERE Naming=?',
+                              (values['-S2-'],))
+                    id_work_type = c.fetchone()[0]
+                    c.execute('INSERT INTO Work_Spec_Work_Types (ID_Work_Spec, ID_Work_Types) values (?,?)',
+                              (id_work_spec, id_work_type))
+                    c.execute('SELECT ID FROM C_Services WHERE Naming=?',
+                              (values['-S2-'],))
+                    id_serv = c.fetchone()[0]
+                    c.execute(
+                        'insert into Contracts_C_Services (Number_Contracts, ID_C_Services) values (?,?)', (id_contract, id_serv))
+                    c.execute(
+                        'SELECT Cost_m2 FROM C_Services WHERE Naming=?', (values['-S2-'],))
+                    cost += square * int(c.fetchone()[0])
+                    window['-COST-'].update(cost)
+                    conn.commit()
+                    conn.close()
                 if values['-S3-'] and values['-D3-'] and values['-T3-']:
-                    pass
+                    c = conn.cursor()
+                    c.execute('INSERT INTO Work_Spec (ID, W_Date, W_Time) values (?,?,?)',
+                              (id_work_spec, values['-D3-'], values['-T3-']))
+                    c.execute('SELECT ID FROM Work_Types WHERE Naming=?',
+                              (values['-S3-'],))
+                    id_work_type = c.fetchone()[0]
+                    c.execute('INSERT INTO Work_Spec_Work_Types (ID_Work_Spec, ID_Work_Types) values (?,?)',
+                              (id_work_spec, id_work_type))
+                    c.execute('SELECT ID FROM C_Services WHERE Naming=?',
+                              (values['-S3-'],))
+                    id_serv = c.fetchone()[0]
+                    c.execute(
+                        'insert into Contracts_C_Services (Number_Contracts, ID_C_Services) values (?,?)', (id_contract, id_serv))
+                    c.execute(
+                        'SELECT Cost_m2 FROM C_Services WHERE Naming=?', (values['-S3-'],))
+                    cost += square * int(c.fetchone()[0])
+                    window['-COST-'].update(cost)
+                    conn.commit()
+                    conn.close()
                 sg.Popup(
                     f'Заказ создан успешно!\nНомер заказа: {id_order}\nНомер договора: {id_contract}\nСтоимость услуг: {cost}', title='Успешно')
             else:
