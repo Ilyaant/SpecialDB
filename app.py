@@ -1,7 +1,7 @@
 import PySimpleGUI as sg
 import sqlite3
 import pickledb
-from tinydb import TinyDB
+from tinydb import TinyDB, Query
 from datetime import date
 
 rdb = pickledb.load('rates.db', False)
@@ -344,7 +344,7 @@ def register_ent():
 def user_window():
     layout_user = [
         [sg.Button('Создать заявку')],
-        [sg.Button('Просмотреть мои заявки')],
+        [sg.Button('Просмотреть мои заказы')],
         [sg.Button('Оставить отзыв')],
         [sg.Push(), sg.Button('Закрыть')]
     ]
@@ -469,6 +469,14 @@ def user_create_order_ind(login):
                     conn.close()
                 sg.Popup(
                     f'Заказ создан успешно!\nНомер заказа: {id_order}\nНомер договора: {id_contract}\nСтоимость услуг: {cost}', title='Успешно')
+                ord_db.insert({
+                    'login': login,
+                    'S1': values['-S1-'], 'D1': values['-D1-'], 'T1': values['-T1-'],
+                    'S2': values['-S2-'], 'D2': values['-D2-'], 'T2': values['-T2-'],
+                    'S3': values['-S3-'], 'D3': values['-D3-'], 'T3': values['-T3-'],
+                    'num': id_order,
+                    'cost': cost
+                })
             else:
                 sg.Popup('Ошибка. Проверьте введенные данные', title='Ошибка')
 
@@ -596,10 +604,46 @@ def user_create_order_ent(login):
                     conn.close()
                 sg.Popup(
                     f'Заказ создан успешно!\nНомер заказа: {id_order}\nНомер договора: {id_contract}\nСтоимость услуг: {cost}', title='Успешно')
+                ord_db.insert({
+                    'login': login,
+                    'S1': values['-S1-'], 'D1': values['-D1-'], 'T1': values['-T1-'],
+                    'S2': values['-S2-'], 'D2': values['-D2-'], 'T2': values['-T2-'],
+                    'S3': values['-S3-'], 'D3': values['-D3-'], 'T3': values['-T3-'],
+                    'num': id_order,
+                    'cost': cost
+                })
             else:
                 sg.Popup('Ошибка. Проверьте введенные данные', title='Ошибка')
 
     window.close()
+
+
+def user_list_orders(login):
+    layout = [
+        [sg.Text('Мои заказы:')],
+        [sg.Multiline(key='-MYORD-', size=(50, 5))],
+        [sg.Push(), sg.Button('Закрыть')]
+    ]
+
+    window = sg.Window('Мои заказы', layout)
+    while True:
+        event, values = window.read()
+        if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
+            break
+        User = Query()
+        my_orders = ord_db.search(User.login == login)
+        if my_orders == []:
+            window['-MYORD-'].update('Похоже, Вы еще не сделали ни одного заказа...')
+        else:
+            res = ''
+            for mo in my_orders:
+                res += f"Номер заказа: {mo['num']}\n"
+                res += f"Услуга 1: {mo['S1']}, {mo['D1']}, {mo['T1']}\n"
+                res += f"Услуга 2: {mo['S2']}, {mo['D2']}, {mo['T2']}\n"
+                res += f"Услуга 3: {mo['S3']}, {mo['D3']}, {mo['T3']}\n"
+                res += f"Стоимость: {mo['cost']} руб.\n\n"
+            res = res[:-4]
+            window['-MYORD-'].update(res)
 
 
 def user_give_feedback():
@@ -730,8 +774,8 @@ while True:
                     break
                 if event_u == 'Создать заявку':
                     user_create_order_ent(values['-LOGIN-'])
-                if event_u == 'Просмотреть мои заявки':
-                    pass
+                if event_u == 'Просмотреть мои заказы':
+                    user_list_orders(values['-LOGIN-'])
                 if event_u == 'Оставить отзыв':
                     user_give_feedback()
             window_user.close()
