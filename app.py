@@ -471,11 +471,13 @@ def user_create_order_ind(login):
                     f'Заказ создан успешно!\nНомер заказа: {id_order}\nНомер договора: {id_contract}\nСтоимость услуг: {cost}', title='Успешно')
                 ord_db.insert({
                     'login': login,
+                    'id': udb.get(login)[1],
                     'S1': values['-S1-'], 'D1': values['-D1-'], 'T1': values['-T1-'],
                     'S2': values['-S2-'], 'D2': values['-D2-'], 'T2': values['-T2-'],
                     'S3': values['-S3-'], 'D3': values['-D3-'], 'T3': values['-T3-'],
                     'num': id_order,
-                    'cost': cost
+                    'cost': cost,
+                    'status': 'not completed'
                 })
             else:
                 sg.Popup('Ошибка. Проверьте введенные данные', title='Ошибка')
@@ -606,11 +608,13 @@ def user_create_order_ent(login):
                     f'Заказ создан успешно!\nНомер заказа: {id_order}\nНомер договора: {id_contract}\nСтоимость услуг: {cost}', title='Успешно')
                 ord_db.insert({
                     'login': login,
+                    'id': id_ent,
                     'S1': values['-S1-'], 'D1': values['-D1-'], 'T1': values['-T1-'],
                     'S2': values['-S2-'], 'D2': values['-D2-'], 'T2': values['-T2-'],
                     'S3': values['-S3-'], 'D3': values['-D3-'], 'T3': values['-T3-'],
                     'num': id_order,
-                    'cost': cost
+                    'cost': cost,
+                    'status': 'not completed'
                 })
             else:
                 sg.Popup('Ошибка. Проверьте введенные данные', title='Ошибка')
@@ -676,7 +680,7 @@ def user_give_feedback():
 ######################################## WORKER ######################################################
 
 # Функция для вывода окна сотрудника
-def worker_window():
+def worker_window(login):
     layout_worker = [
         [sg.Text('Мои назначения:')],
         [sg.Multiline(key='-ASSIGN-', size=(50, 5))],
@@ -688,6 +692,62 @@ def worker_window():
         event, values = window.read()
         if event == sg.WINDOW_CLOSED or event == 'Выйти':
             break
+
+        res = ''
+        conn = sqlite3.connect('Cleaning_Company.db')
+        c = conn.cursor()
+        c.execute(
+            'SELECT ID_Entities FROM Employees_Entities WHERE Passport_SN_Employees=?', (login,))
+        c1 = c.fetchall()
+        for row in c1:
+            c.execute('SELECT * FROM Entities WHERE ID=?', (row[0],))
+            name_ent = c.fetchone()[1]
+            sq_ent = c.fetchone()[2]
+            add_ent = c.fetchone()[3]
+            User = Query()
+            search = ord_db.search(User.id == row[0])
+            for s in search:
+                num = s['num']
+                s1 = s['S1']
+                d1 = s['D1']
+                t1 = s['T1']
+                s2 = s['S2']
+                d2 = s['D2']
+                t2 = s['T2']
+                s3 = s['S3']
+                d3 = s['D3']
+                t3 = s['T3']
+                if s['status'] == 'not completed':
+                    res += f'Заказ {num}\n{name_ent}, {add_ent}, {sq_ent} кв. м\nУслуга 1: {s1}, {d1}, {t1}\nУслуга 2: {s2}, {d2}, {t2}\nУслуга 3: {s3}, {d3}, {t3}'
+
+        c.execute(
+            'SELECT Passport_SN_Individuals FROM Employees_Individuals WHERE Passport_SN_Employees=?', (login,))
+        c2 = c.fetchall()
+        for row in c2:
+            c.execute(
+                'SELECT * FROM Individuals WHERE Passport_SN=?', (row[0],))
+            fname_ind = c.fetchone()[1]
+            sname_ind = c.fetchone()[2]
+            lname_ind = c.fetchone()[3]
+            sq_ind = c.fetchone()[5]
+            add_ind = c.fetchone()[4]
+            User = Query()
+            search = ord_db.search(User.id == row[0])
+            for s in search:
+                num = s['num']
+                s1 = s['S1']
+                d1 = s['D1']
+                t1 = s['T1']
+                s2 = s['S2']
+                d2 = s['D2']
+                t2 = s['T2']
+                s3 = s['S3']
+                d3 = s['D3']
+                t3 = s['T3']
+                if s['status'] == 'not completed':
+                    res += f'Заказ {num}\n{lname_ind} {fname_ind} {sname_ind}, {add_ind}, {sq_ind} кв. м\nУслуга 1: {s1}, {d1}, {t1}\nУслуга 2: {s2}, {d2}, {t2}\nУслуга 3: {s3}, {d3}, {t3}'
+        window['-ASSIGN-'].update(res)
+        conn.close()
     window.close()
 
 
@@ -781,7 +841,7 @@ while True:
             window_user.close()
 
         elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'wrk':
-            worker_window()
+            worker_window(int(values['-LOGIN-']))
 
         # обработка ошибки ввода неизвестного логина и пароля
         else:
