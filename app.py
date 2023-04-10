@@ -28,6 +28,7 @@ def admin_window():
     return sg.Window('Клининговая компания. Администратор', layout_admin)
 
 
+# Функция для добавления новой услуги
 def admin_add_service():
     layout = [
         [sg.Text('Название услуги:')],
@@ -61,6 +62,7 @@ def admin_add_service():
     window.close()
 
 
+# Функция для добавления нового типа работ
 def admin_add_work_type():
     layout = [
         [sg.Text('Название типа работ:')],
@@ -85,6 +87,7 @@ def admin_add_work_type():
     window.close()
 
 
+# Функция для добавления новой должности
 def admin_add_position():
     layout = [
         [sg.Text('Название должности:')],
@@ -116,6 +119,7 @@ def admin_add_position():
     window.close()
 
 
+# Функция для добавления нового работника
 def admin_add_worker():
     layout = [
         [sg.Text('Серия и номер паспорта:')],
@@ -167,6 +171,7 @@ def admin_add_worker():
     window.close()
 
 
+# Функция для просмотра всех клиентов
 def admin_list_clients():
     layout = [
         [sg.Text('Физические лица:')],
@@ -191,6 +196,7 @@ def admin_list_clients():
     window.close()
 
 
+# Функция для просмотра всех работников
 def admin_list_workers():
     layout = [
         [sg.Text('Сотрудники:')],
@@ -211,6 +217,7 @@ def admin_list_workers():
     window.close()
 
 
+# Функция для просмотра всех договоров
 def admin_list_contracts():
     layout = [
         [sg.Text('Договоры:')],
@@ -231,6 +238,7 @@ def admin_list_contracts():
     window.close()
 
 
+# Функция для просмотра всех заказов
 def admin_list_orders():
     layout = [
         [sg.Text('Заказы:')],
@@ -251,9 +259,74 @@ def admin_list_orders():
     window.close()
 
 
+# Функция для назначения работника на заказ
 def admin_assign_worker():
-    # TODO
-    return 0
+    layout = [
+        [sg.Text('Список заказов:')],
+        [sg.Multiline(key='-ORD-', size=(50, 5))],
+        [sg.Text('Номер заказа:'), sg.InputText(
+            key='-ORDNUM-', do_not_clear=False)],
+        [sg.Text('Серия и номер паспорта сотрудника:'),
+         sg.InputText(key='-WRK-', do_not_clear=False)],
+        [sg.Button('Назначить'), sg.Push(), sg.Button('Отмена')]
+    ]
+
+    window = sg.Window('Назначить сотрудника', layout)
+    while True:
+        event, values = window.read()
+        if event == 'Отмена' or event == sg.WINDOW_CLOSED:
+            break
+
+        res = ''
+        User = Query()
+        search = ord_db.search(User.status == 'not completed')
+        for s in search:
+            res += f'Заказ {s["num"]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
+        res = res[:-4:]
+        window['-ORD-'].update(res)
+
+        if event == 'Назначить':
+            try:
+                num = int(values['-ORDNUM-'])
+                psn = int(values['-WRK-'])
+            except:
+                sg.Popup('Ошибка. Проверьте введенные данные', title='Ошибка')
+            else:
+                User = Query()
+                login = ord_db.search(User.num == num)[0]['login']
+                id_user = udb.get(login)[1]
+                type_user = udb.get(login)[-1]
+                if type_user == 'ind':
+                    conn = sqlite3.connect('Cleaning_Company.db')
+                    c = conn.cursor()
+                    c.execute(
+                        'INSERT INTO Employees_Individuals (Passport_SN_Employees, Passport_SN_Individuals) VALUES (?, ?)', (psn, int(id_user)))
+                    conn.commit()
+                    conn.close()
+                    sg.Popup('Работник назначен успешно', title='Успешно')
+                if type_user == 'ent':
+                    conn = sqlite3.connect('Cleaning_Company.db')
+                    c = conn.cursor()
+                    c.execute(
+                        'SELECT ID FROM Entities WHERE Naming=?', (str(id_user),))
+                    id_ent = int(c.fetchone()[0])
+                    c.execute(
+                        'INSERT INTO Employees_Entities (Passport_SN_Employees, ID_Entities) VALUES (?, ?)', (psn, id_ent))
+                    conn.commit()
+                    conn.close()
+                    sg.Popup('Работник назначен успешно', title='Успешно')
+
+                User = Query()
+                ord_db.update({'status': 'assigned'}, User.num == num)
+                res = ''
+                User = Query()
+                search = ord_db.search(User.status == 'not completed')
+                for s in search:
+                    res += f'Заказ {s["num"]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
+                res = res[:-4:]
+                window['-ORD-'].update(res)
+
+        window.close()
 
 ######################################## USER ######################################################
 
@@ -351,6 +424,7 @@ def user_window():
     return sg.Window('Клининговая компания. Пользователь', layout_user)
 
 
+# Функция для создания заказа физ. лица
 def user_create_order_ind(login):
     layout = [
         [sg.Text('Доступные услуги и их цена за кв. м:')],
@@ -485,6 +559,7 @@ def user_create_order_ind(login):
     window.close()
 
 
+# Функция для создания заказа юр. лица
 def user_create_order_ent(login):
     layout = [
         [sg.Text('Доступные услуги и их цена за кв. м:')],
@@ -622,6 +697,7 @@ def user_create_order_ent(login):
     window.close()
 
 
+# Функция для просмотра всех заказов пользователя
 def user_list_orders(login):
     layout = [
         [sg.Text('Мои заказы:')],
@@ -650,6 +726,7 @@ def user_list_orders(login):
             window['-MYORD-'].update(res)
 
 
+# Функция для обратной связи по заказу
 def user_give_feedback():
     layout = [
         [sg.Text('Номер заказа:')],
@@ -718,7 +795,7 @@ def worker_window(login):
                 d3 = s['D3']
                 t3 = s['T3']
                 if s['status'] == 'not completed':
-                    res += f'Заказ {num}\n{name_ent}, {add_ent}, {sq_ent} кв. м\nУслуга 1: {s1}, {d1}, {t1}\nУслуга 2: {s2}, {d2}, {t2}\nУслуга 3: {s3}, {d3}, {t3}'
+                    res += f'Заказ {num}\n{name_ent}, {add_ent}, {sq_ent} кв. м\nУслуга 1: {s1}, {d1}, {t1}\nУслуга 2: {s2}, {d2}, {t2}\nУслуга 3: {s3}, {d3}, {t3}\n\n'
 
         c.execute(
             'SELECT Passport_SN_Individuals FROM Employees_Individuals WHERE Passport_SN_Employees=?', (login,))
@@ -745,7 +822,8 @@ def worker_window(login):
                 d3 = s['D3']
                 t3 = s['T3']
                 if s['status'] == 'not completed':
-                    res += f'Заказ {num}\n{lname_ind} {fname_ind} {sname_ind}, {add_ind}, {sq_ind} кв. м\nУслуга 1: {s1}, {d1}, {t1}\nУслуга 2: {s2}, {d2}, {t2}\nУслуга 3: {s3}, {d3}, {t3}'
+                    res += f'Заказ {num}\n{lname_ind} {fname_ind} {sname_ind}, {add_ind}, {sq_ind} кв. м\nУслуга 1: {s1}, {d1}, {t1}\nУслуга 2: {s2}, {d2}, {t2}\nУслуга 3: {s3}, {d3}, {t3}\n\n'
+        res = res[:-4:]
         window['-ASSIGN-'].update(res)
         conn.close()
     window.close()
@@ -812,6 +890,7 @@ while True:
                     admin_assign_worker()
             window_admin.close()
 
+        # запуск окна пользователя (физ. лица)
         elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'ind':
             window_user = user_window()
             while True:
@@ -820,12 +899,13 @@ while True:
                     break
                 if event_u == 'Создать заявку':
                     user_create_order_ind(values['-LOGIN-'])
-                if event_u == 'Просмотреть мои заявки':
-                    pass
+                if event_u == 'Просмотреть мои заказы':
+                    user_list_orders(values['-LOGIN-'])
                 if event_u == 'Оставить отзыв':
                     user_give_feedback()
             window_user.close()
 
+        # запуск окна пользователя (юр. лица)
         elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'ent':
             window_user = user_window()
             while True:
@@ -840,6 +920,7 @@ while True:
                     user_give_feedback()
             window_user.close()
 
+        # запуск окна работника
         elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'wrk':
             worker_window(int(values['-LOGIN-']))
 
