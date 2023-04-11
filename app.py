@@ -234,7 +234,7 @@ def admin_list_workers():
         pos_name = c.fetchone()[0]
         c.execute('SELECT Salary FROM Positions WHERE ID=?', (id_pos,))
         sal = int(c.fetchone()[0])
-        res_emps += f'{emp[0]} {emp[4]} {emp[3]} {emp[2]} {pos_name} {sal} {emp[6]} {emp[7]}\n'
+        res_emps += f'{emp[0]} {emp[4]} {emp[3]} {emp[2]} {pos_name} {sal} р. {emp[6]} {emp[7]}\n'
     window['-EMP-'].update(res_emps)
     conn.close()
 
@@ -294,11 +294,6 @@ def admin_list_orders():
 
     window = sg.Window('Просмотреть заказы', layout, finalize=True)
 
-    # conn = sqlite3.connect('Cleaning_Company.db')
-    # c = conn.cursor()
-    # c.execute('SELECT * FROM Orders')
-    # window['-ORD-'].update(c.fetchall())
-    # conn.close()
     res_ent = ''
     res_ind = ''
     search = ord_db.all()
@@ -609,8 +604,8 @@ def user_create_order_ind(login):
                 if values['-S2-'] and values['-D2-'] and values['-T2-']:
                     conn = sqlite3.connect('Cleaning_Company.db')
                     c = conn.cursor()
-                    c.execute('INSERT INTO Work_Spec (ID, W_Date, W_Time) values (?,?,?)',
-                              (id_work_spec, values['-D2-'], values['-T2-']))
+                    c.execute('INSERT INTO Work_Spec (W_Date, W_Time) values (?,?)',
+                              (values['-D2-'], values['-T2-']))
                     c.execute('SELECT ID FROM Work_Types WHERE Naming=?',
                               (values['-S2-'],))
                     id_work_type = c.fetchone()[0]
@@ -630,8 +625,8 @@ def user_create_order_ind(login):
                 if values['-S3-'] and values['-D3-'] and values['-T3-']:
                     conn = sqlite3.connect('Cleaning_Company.db')
                     c = conn.cursor()
-                    c.execute('INSERT INTO Work_Spec (ID, W_Date, W_Time) values (?,?,?)',
-                              (id_work_spec, values['-D3-'], values['-T3-']))
+                    c.execute('INSERT INTO Work_Spec (W_Date, W_Time) values (?,?)',
+                              (values['-D3-'], values['-T3-']))
                     c.execute('SELECT ID FROM Work_Types WHERE Naming=?',
                               (values['-S3-'],))
                     id_work_type = c.fetchone()[0]
@@ -755,8 +750,8 @@ def user_create_order_ent(login):
                 if values['-S2-'] and values['-D2-'] and values['-T2-']:
                     conn = sqlite3.connect('Cleaning_Company.db')
                     c = conn.cursor()
-                    c.execute('INSERT INTO Work_Spec (ID, W_Date, W_Time) values (?,?,?)',
-                              (id_work_spec, values['-D2-'], values['-T2-']))
+                    c.execute('INSERT INTO Work_Spec (W_Date, W_Time) values (?,?)',
+                              (values['-D2-'], values['-T2-']))
                     c.execute('SELECT ID FROM Work_Types WHERE Naming=?',
                               (values['-S2-'],))
                     id_work_type = c.fetchone()[0]
@@ -776,8 +771,8 @@ def user_create_order_ent(login):
                 if values['-S3-'] and values['-D3-'] and values['-T3-']:
                     conn = sqlite3.connect('Cleaning_Company.db')
                     c = conn.cursor()
-                    c.execute('INSERT INTO Work_Spec (ID, W_Date, W_Time) values (?,?,?)',
-                              (id_work_spec, values['-D3-'], values['-T3-']))
+                    c.execute('INSERT INTO Work_Spec (W_Date, W_Time) values (?,?)',
+                              (values['-D3-'], values['-T3-']))
                     c.execute('SELECT ID FROM Work_Types WHERE Naming=?',
                               (values['-S3-'],))
                     id_work_type = c.fetchone()[0]
@@ -834,7 +829,7 @@ def user_list_orders(login):
             res += f"Услуга 2: {mo['S2']}, {mo['D2']}, {mo['T2']}\n"
             res += f"Услуга 3: {mo['S3']}, {mo['D3']}, {mo['T3']}\n"
             res += f"Стоимость: {mo['cost']} руб.\n\n"
-        res = res[:-4:]
+        res = res
         window['-MYORD-'].update(res)
 
     while True:
