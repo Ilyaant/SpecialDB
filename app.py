@@ -16,7 +16,7 @@ def admin_window():
     layout_admin = [
         [sg.Button('Добавить услугу'), sg.Push(),
          sg.Button('Просмотреть клиентов')],
-        [sg.Button('Добавить тип работ'), sg.Push(),
+        [sg.Button('Просмотреть услуги'), sg.Push(),
          sg.Button('Просмотреть сотрудников')],
         [sg.Button('Добавить должность'), sg.Push(),
          sg.Button('Просмотреть договоры')],
@@ -193,13 +193,13 @@ def admin_list_clients():
         inds = c.fetchall()
         for ind in inds:
             res_inds += f'{ind[0]} {ind[3]} {ind[2]} {ind[1]} {ind[4]}, {ind[5]} кв. м\n'
-        window['-IND-'].update(res_inds)
+        window['-IND-'].update(res_inds[:-2:])
         res_ents = 'Название Адрес Площадь\n\n'
         c.execute('SELECT * FROM Entities')
         ents = c.fetchall()
         for ent in ents:
             res_ents += f'{ent[1]} {ent[3]}, {ent[2]} кв. м\n'
-        window['-ENT-'].update(res_ents)
+        window['-ENT-'].update(res_ents[:-2:])
         conn.close()
     window.close()
 
@@ -229,7 +229,7 @@ def admin_list_workers():
             c.execute('SELECT Salary FROM Positions WHERE ID=?', (id_pos,))
             sal = int(c.fetchone()[0])
             res_emps += f'{emp[0]} {emp[4]} {emp[3]} {emp[2]} {pos_name} {sal} {emp[5]} {emp[6]}\n'
-        window['-EMP-'].update(res_emps)
+        window['-EMP-'].update(res_emps[:-2:])
         conn.close()
     window.close()
 
@@ -254,15 +254,15 @@ def admin_list_contracts():
         res_contr_ent = 'Номер Название компании Название договора Дата подписания Номер заказа\n\n'
         c.execute('SELECT * FROM Contracts')
         contrs_ent = c.fetchall()
-        for c in contrs_ent:
-            res_contr_ent += f'{c[0]} {c[1]} {c[2]} {c[3]} {c[4]}'
-        window['-CON_ENT-'].update(res_contr_ent)
+        for contr in contrs_ent:
+            res_contr_ent += f'{contr[0]} {contr[1]} {contr[2]} {contr[3]} {contr[4]}\n'
+        window['-CON_ENT-'].update(res_contr_ent[:-2:])
         res_contr_ind = 'Номер Паспорт Название договора Дата подписания Номер заказа\n\n'
         c.execute('SELECT * FROM Contracts')
         contrs_ind = c.fetchall()
         for c in contrs_ind:
-            res_contr_ind += f'{c[0]} {c[1]} {c[2]} {c[3]} {c[4]}'
-        window['-CON_IND-'].update(res_contr_ind)
+            res_contr_ind += f'{c[0]} {c[1]} {c[2]} {c[3]} {c[4]}\n'
+        window['-CON_IND-'].update(res_contr_ind[:-2:])
         conn.close()
     window.close()
 
@@ -300,6 +300,30 @@ def admin_list_orders():
         res_ind = res_ind[:-4:]
         window['-ORD_ENT-'].update(res_ent)
         window['-ORD_IND-'].update(res_ind)
+    window.close()
+
+
+# Функция для просмотра услуг
+def admin_list_services():
+    layout = [
+        [sg.Text('Доступные услуги:')],
+        [sg.Multiline(key='-SERV-', size=(50, 5))],
+        [sg.Push(), sg.Button('Закрыть')]
+    ]
+
+    window = sg.Window('Просмотр услуг', layout)
+    while True:
+        event, values = window.read()
+        if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
+            break
+        conn = sqlite3.connect('Cleaning_Company.db')
+        c = conn.cursor()
+        res_serv = 'Название Стоимость (кв. м)\n\n'
+        c.execute('SELECT * FROM C_Services')
+        serv = c.fetchall()
+        for s in serv:
+            res_serv += f'{s[1]} {s[2]}\n'
+        window['-SERV-'].update(res_serv)
     window.close()
 
 
@@ -916,8 +940,8 @@ while True:
                     break
                 if event_a == 'Добавить услугу':
                     admin_add_service()
-                if event_a == 'Добавить тип работ':
-                    admin_add_work_type()
+                # if event_a == 'Добавить тип работ':
+                #     admin_add_work_type()
                 if event_a == 'Добавить должность':
                     admin_add_position()
                 if event_a == 'Добавить сотрудника':
@@ -932,6 +956,8 @@ while True:
                     admin_list_orders()
                 if event_a == 'Назначить сотрудника':
                     admin_assign_worker()
+                if event_a == 'Просмотреть услуги':
+                    admin_list_services()
             window_admin.close()
 
         # запуск окна пользователя (физ. лица)
