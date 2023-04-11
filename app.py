@@ -234,7 +234,7 @@ def admin_list_workers():
         pos_name = c.fetchone()[0]
         c.execute('SELECT Salary FROM Positions WHERE ID=?', (id_pos,))
         sal = int(c.fetchone()[0])
-        res_emps += f'{emp[0]} {emp[4]} {emp[3]} {emp[2]} {pos_name} {sal} {emp[5]} {emp[6]}\n'
+        res_emps += f'{emp[0]} {emp[4]} {emp[3]} {emp[2]} {pos_name} {sal} {emp[6]} {emp[7]}\n'
     window['-EMP-'].update(res_emps)
     conn.close()
 
