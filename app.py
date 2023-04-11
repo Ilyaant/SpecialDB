@@ -187,26 +187,29 @@ def admin_list_clients():
         [sg.Push(), sg.Button('Закрыть')]
     ]
 
-    window = sg.Window('Просмотреть клиентов', layout)
+    window = sg.Window('Просмотреть клиентов', layout, finalize=True)
+
+    conn = sqlite3.connect('Cleaning_Company.db')
+    c = conn.cursor()
+    res_inds = 'Паспорт Фамилия Имя Отчество Адрес Площадь\n\n'
+    c.execute('SELECT * FROM Individuals')
+    inds = c.fetchall()
+    for ind in inds:
+        res_inds += f'{ind[0]} {ind[3]} {ind[2]} {ind[1]} {ind[4]}, {ind[5]} кв. м\n'
+    window['-IND-'].update(res_inds)
+    res_ents = 'Название Адрес Площадь\n\n'
+    c.execute('SELECT * FROM Entities')
+    ents = c.fetchall()
+    for ent in ents:
+        res_ents += f'{ent[1]} {ent[3]}, {ent[2]} кв. м\n'
+    window['-ENT-'].update(res_ents)
+    conn.close()
+
     while True:
         event, values = window.read()
         if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
             break
-        conn = sqlite3.connect('Cleaning_Company.db')
-        c = conn.cursor()
-        res_inds = 'Паспорт Фамилия Имя Отчество Адрес Площадь\n\n'
-        c.execute('SELECT * FROM Individuals')
-        inds = c.fetchall()
-        for ind in inds:
-            res_inds += f'{ind[0]} {ind[3]} {ind[2]} {ind[1]} {ind[4]}, {ind[5]} кв. м\n'
-        window['-IND-'].update(res_inds[:-2:])
-        res_ents = 'Название Адрес Площадь\n\n'
-        c.execute('SELECT * FROM Entities')
-        ents = c.fetchall()
-        for ent in ents:
-            res_ents += f'{ent[1]} {ent[3]}, {ent[2]} кв. м\n'
-        window['-ENT-'].update(res_ents[:-2:])
-        conn.close()
+
     window.close()
 
 
@@ -218,25 +221,28 @@ def admin_list_workers():
         [sg.Push(), sg.Button('Закрыть')]
     ]
 
-    window = sg.Window('Просмотреть сотрудников', layout)
+    window = sg.Window('Просмотреть сотрудников', layout, finalize=True)
+
+    conn = sqlite3.connect('Cleaning_Company.db')
+    c = conn.cursor()
+    res_emps = 'Паспорт Фамилия Имя Отчество Должность Зарплата Дата рождения Дата выхода на работу\n\n'
+    c.execute('SELECT * FROM Employees')
+    emps = c.fetchall()
+    for emp in emps:
+        id_pos = emp[1]
+        c.execute('SELECT Naming FROM Positions WHERE ID=?', (id_pos,))
+        pos_name = c.fetchone()[0]
+        c.execute('SELECT Salary FROM Positions WHERE ID=?', (id_pos,))
+        sal = int(c.fetchone()[0])
+        res_emps += f'{emp[0]} {emp[4]} {emp[3]} {emp[2]} {pos_name} {sal} {emp[5]} {emp[6]}\n'
+    window['-EMP-'].update(res_emps)
+    conn.close()
+
     while True:
         event, values = window.read()
         if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
             break
-        conn = sqlite3.connect('Cleaning_Company.db')
-        c = conn.cursor()
-        res_emps = 'Паспорт Фамилия Имя Отчество Должность Зарплата Дата рождения Дата выхода на работу\n\n'
-        c.execute('SELECT * FROM Employees')
-        emps = c.fetchall()
-        for emp in emps:
-            id_pos = emp[1]
-            c.execute('SELECT Naming FROM Positions WHERE ID=?', (id_pos,))
-            pos_name = c.fetchone()[0]
-            c.execute('SELECT Salary FROM Positions WHERE ID=?', (id_pos,))
-            sal = int(c.fetchone()[0])
-            res_emps += f'{emp[0]} {emp[4]} {emp[3]} {emp[2]} {pos_name} {sal} {emp[5]} {emp[6]}\n'
-        window['-EMP-'].update(res_emps[:-2:])
-        conn.close()
+
     window.close()
 
 
@@ -250,26 +256,29 @@ def admin_list_contracts():
         [sg.Push(), sg.Button('Закрыть')]
     ]
 
-    window = sg.Window('Просмотреть договоры', layout)
+    window = sg.Window('Просмотреть договоры', layout, finalize=True)
+
+    conn = sqlite3.connect('Cleaning_Company.db')
+    c = conn.cursor()
+    res_contr_ent = 'Номер Название компании Название договора Дата подписания Номер заказа\n\n'
+    c.execute('SELECT * FROM Contracts')
+    contrs_ent = c.fetchall()
+    for contr in contrs_ent:
+        res_contr_ent += f'{contr[0]} {contr[1]} {contr[2]} {contr[3]} {contr[4]}\n'
+    window['-CON_ENT-'].update(res_contr_ent)
+    res_contr_ind = 'Номер Паспорт Название договора Дата подписания Номер заказа\n\n'
+    c.execute('SELECT * FROM Contracts')
+    contrs_ind = c.fetchall()
+    for c in contrs_ind:
+        res_contr_ind += f'{c[0]} {c[1]} {c[2]} {c[3]} {c[4]}\n'
+    window['-CON_IND-'].update(res_contr_ind)
+    conn.close()
+
     while True:
         event, values = window.read()
         if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
             break
-        conn = sqlite3.connect('Cleaning_Company.db')
-        c = conn.cursor()
-        res_contr_ent = 'Номер Название компании Название договора Дата подписания Номер заказа\n\n'
-        c.execute('SELECT * FROM Contracts')
-        contrs_ent = c.fetchall()
-        for contr in contrs_ent:
-            res_contr_ent += f'{contr[0]} {contr[1]} {contr[2]} {contr[3]} {contr[4]}\n'
-        window['-CON_ENT-'].update(res_contr_ent[:-2:])
-        res_contr_ind = 'Номер Паспорт Название договора Дата подписания Номер заказа\n\n'
-        c.execute('SELECT * FROM Contracts')
-        contrs_ind = c.fetchall()
-        for c in contrs_ind:
-            res_contr_ind += f'{c[0]} {c[1]} {c[2]} {c[3]} {c[4]}\n'
-        window['-CON_IND-'].update(res_contr_ind[:-2:])
-        conn.close()
+
     window.close()
 
 
@@ -283,29 +292,32 @@ def admin_list_orders():
         [sg.Push(), sg.Button('Закрыть')]
     ]
 
-    window = sg.Window('Просмотреть заказы', layout)
+    window = sg.Window('Просмотреть заказы', layout, finalize=True)
+
+    # conn = sqlite3.connect('Cleaning_Company.db')
+    # c = conn.cursor()
+    # c.execute('SELECT * FROM Orders')
+    # window['-ORD-'].update(c.fetchall())
+    # conn.close()
+    res_ent = ''
+    res_ind = ''
+    search = ord_db.all()
+    for s in search:
+        login = s['login']
+        if udb.get(login)[-1] == 'ent':
+            res_ent += f'Заказ {s["num"]} от {udb.get(login)[1]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
+        if udb.get(login)[-1] == 'ind':
+            res_ind += f'Заказ {s["num"]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
+    res_ent = res_ent
+    res_ind = res_ind
+    window['-ORD_ENT-'].update(res_ent)
+    window['-ORD_IND-'].update(res_ind)
+
     while True:
         event, values = window.read()
         if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
             break
-        # conn = sqlite3.connect('Cleaning_Company.db')
-        # c = conn.cursor()
-        # c.execute('SELECT * FROM Orders')
-        # window['-ORD-'].update(c.fetchall())
-        # conn.close()
-        res_ent = ''
-        res_ind = ''
-        search = ord_db.all()
-        for s in search:
-            login = s['login']
-            if udb.get(login)[-1] == 'ent':
-                res_ent += f'Заказ {s["num"]} от {udb.get(login)[1]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
-            if udb.get(login)[-1] == 'ind':
-                res_ind += f'Заказ {s["num"]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
-        res_ent = res_ent[:-4:]
-        res_ind = res_ind[:-4:]
-        window['-ORD_ENT-'].update(res_ent)
-        window['-ORD_IND-'].update(res_ind)
+
     window.close()
 
 
@@ -317,22 +329,22 @@ def admin_list_services():
         [sg.Push(), sg.Button('Закрыть')]
     ]
 
-    window = sg.Window('Просмотр услуг', layout)
+    window = sg.Window('Просмотр услуг', layout, finalize=True)
+
+    conn = sqlite3.connect('Cleaning_Company.db')
+    c = conn.cursor()
+    res_serv = 'Название Стоимость (кв. м)\n\n'
+    c.execute('SELECT * FROM C_Services')
+    serv = c.fetchall()
+    for s in serv:
+        res_serv += f'{s[1]} {s[2]}\n'
+    window['-SERV-'].update(res_serv)
+    conn.close()
+
     while True:
         event, values = window.read()
         if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
             break
-
-        conn = sqlite3.connect('Cleaning_Company.db')
-        c = conn.cursor()
-        res_serv = 'Название Стоимость (кв. м)\n\n'
-        c.execute('SELECT * FROM C_Services')
-        serv = c.fetchall()
-        for s in serv:
-            res_serv += f'{s[1]} {s[2]}\n'
-        window['-SERV-'].update(res_serv)
-        conn.close()
-        # window['-SERV-'].print('res_serv')
 
     window.close()
 
@@ -349,19 +361,19 @@ def admin_assign_worker():
         [sg.Button('Назначить'), sg.Push(), sg.Button('Отмена')]
     ]
 
-    window = sg.Window('Назначить сотрудника', layout)
+    window = sg.Window('Назначить сотрудника', layout, finalize=True)
+
+    res = ''
+    User = Query()
+    search = ord_db.search(User.status == 'not completed')
+    for s in search:
+        res += f'Заказ {s["num"]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
+    window['-ORD-'].update(res)
+
     while True:
         event, values = window.read()
         if event == 'Отмена' or event == sg.WINDOW_CLOSED:
             break
-
-        res = ''
-        User = Query()
-        search = ord_db.search(User.status == 'not completed')
-        for s in search:
-            res += f'Заказ {s["num"]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
-        res = res[:-4:]
-        window['-ORD-'].update(res)
 
         if event == 'Назначить':
             try:
@@ -401,7 +413,7 @@ def admin_assign_worker():
                 search = ord_db.search(User.status == 'not completed')
                 for s in search:
                     res += f'Заказ {s["num"]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
-                res = res[:-4:]
+                res = res
                 window['-ORD-'].update(res)
     window.close()
 
@@ -481,8 +493,8 @@ def register_ent():
             try:
                 ent = (
                     str(values['-ENTNAME-']),
-                    str(values['-ADDENT-']),
-                    int(values['-SQENT-'])
+                    int(values['-SQENT-']),
+                    str(values['-ADDENT-'])
                 )
             except:
                 sg.Popup('Ошибка. Проверьте введенные данные', title='Ошибка')
@@ -527,17 +539,22 @@ def user_create_order_ind(login):
         [sg.Button('Создать заказ'), sg.Push(), sg.Button('Отмена')]
     ]
 
-    window = sg.Window('Создать заказ', layout)
+    window = sg.Window('Создать заказ', layout, finalize=True)
+
+    conn = sqlite3.connect('Cleaning_Company.db')
+    c = conn.cursor()
+    res_serv = 'Название Стоимость (кв. м)\n\n'
+    c.execute('SELECT * FROM C_Services')
+    serv = c.fetchall()
+    for s in serv:
+        res_serv += f'{s[1]} {s[2]}\n'
+    window['-SERV-'].update(res_serv)
+    conn.close()
+
     while True:
         event, values = window.read()
         if event == 'Отмена' or event == sg.WINDOW_CLOSED:
             break
-
-        conn = sqlite3.connect('Cleaning_Company.db')
-        c = conn.cursor()
-        c.execute('SELECT * FROM C_Services')
-        window['-SERV-'].update(c.fetchall())
-        conn.close()
 
         if event == 'Создать заказ':
             cost = 0
@@ -665,17 +682,22 @@ def user_create_order_ent(login):
         [sg.Button('Создать заказ'), sg.Push(), sg.Button('Отмена')]
     ]
 
-    window = sg.Window('Создать заказ', layout)
+    window = sg.Window('Создать заказ', layout, finalize=True)
+
+    conn = sqlite3.connect('Cleaning_Company.db')
+    c = conn.cursor()
+    res_serv = 'Название Стоимость (кв. м)\n\n'
+    c.execute('SELECT * FROM C_Services')
+    serv = c.fetchall()
+    for s in serv:
+        res_serv += f'{s[1]} {s[2]}\n'
+    window['-SERV-'].update(res_serv)
+    conn.close()
+
     while True:
         event, values = window.read()
         if event == 'Отмена' or event == sg.WINDOW_CLOSED:
             break
-
-        conn = sqlite3.connect('Cleaning_Company.db')
-        c = conn.cursor()
-        c.execute('SELECT * FROM C_Services')
-        window['-SERV-'].update(c.fetchall())
-        conn.close()
 
         if event == 'Создать заказ':
             cost = 0
@@ -798,25 +820,28 @@ def user_list_orders(login):
         [sg.Push(), sg.Button('Закрыть')]
     ]
 
-    window = sg.Window('Мои заказы', layout)
+    window = sg.Window('Мои заказы', layout, finalize=True)
+
+    User = Query()
+    my_orders = ord_db.search(User.login == login)
+    if my_orders == []:
+        window['-MYORD-'].update('Похоже, Вы еще не сделали ни одного заказа...')
+    else:
+        res = ''
+        for mo in my_orders:
+            res += f"Номер заказа: {mo['num']}\n"
+            res += f"Услуга 1: {mo['S1']}, {mo['D1']}, {mo['T1']}\n"
+            res += f"Услуга 2: {mo['S2']}, {mo['D2']}, {mo['T2']}\n"
+            res += f"Услуга 3: {mo['S3']}, {mo['D3']}, {mo['T3']}\n"
+            res += f"Стоимость: {mo['cost']} руб.\n\n"
+        res = res[:-4:]
+        window['-MYORD-'].update(res)
+
     while True:
         event, values = window.read()
         if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
             break
-        User = Query()
-        my_orders = ord_db.search(User.login == login)
-        if my_orders == []:
-            window['-MYORD-'].update('Похоже, Вы еще не сделали ни одного заказа...')
-        else:
-            res = ''
-            for mo in my_orders:
-                res += f"Номер заказа: {mo['num']}\n"
-                res += f"Услуга 1: {mo['S1']}, {mo['D1']}, {mo['T1']}\n"
-                res += f"Услуга 2: {mo['S2']}, {mo['D2']}, {mo['T2']}\n"
-                res += f"Услуга 3: {mo['S3']}, {mo['D3']}, {mo['T3']}\n"
-                res += f"Стоимость: {mo['cost']} руб.\n\n"
-            res = res[:-4:]
-            window['-MYORD-'].update(res)
+
     window.close()
 
 
@@ -858,68 +883,70 @@ def worker_window(login):
         [sg.Push(), sg.Button('Выйти')]
     ]
 
-    window = sg.Window('Клининговая компания. Сотрудник', layout_worker)
+    window = sg.Window('Клининговая компания. Сотрудник',
+                       layout_worker, finalize=True)
+
+    res = ''
+    conn = sqlite3.connect('Cleaning_Company.db')
+    c = conn.cursor()
+    c.execute(
+        'SELECT ID_Entities FROM Employees_Entities WHERE Passport_SN_Employees=?', (login,))
+    c1 = c.fetchall()
+    for row in c1:
+        c.execute('SELECT * FROM Entities WHERE ID=?', (row[0],))
+        name_ent = c.fetchone()[1]
+        sq_ent = c.fetchone()[2]
+        add_ent = c.fetchone()[3]
+        User = Query()
+        search = ord_db.search(User.id == row[0])
+        for s in search:
+            num = s['num']
+            s1 = s['S1']
+            d1 = s['D1']
+            t1 = s['T1']
+            s2 = s['S2']
+            d2 = s['D2']
+            t2 = s['T2']
+            s3 = s['S3']
+            d3 = s['D3']
+            t3 = s['T3']
+            if s['status'] == 'not completed':
+                res += f'Заказ {num}\n{name_ent}, {add_ent}, {sq_ent} кв. м\nУслуга 1: {s1}, {d1}, {t1}\nУслуга 2: {s2}, {d2}, {t2}\nУслуга 3: {s3}, {d3}, {t3}\n\n'
+    c.execute(
+        'SELECT Passport_SN_Individuals FROM Employees_Individuals WHERE Passport_SN_Employees=?', (login,))
+    c2 = c.fetchall()
+    for row in c2:
+        c.execute(
+            'SELECT * FROM Individuals WHERE Passport_SN=?', (row[0],))
+        fname_ind = c.fetchone()[1]
+        sname_ind = c.fetchone()[2]
+        lname_ind = c.fetchone()[3]
+        sq_ind = c.fetchone()[5]
+        add_ind = c.fetchone()[4]
+        User = Query()
+        search = ord_db.search(User.id == row[0])
+        for s in search:
+            num = s['num']
+            s1 = s['S1']
+            d1 = s['D1']
+            t1 = s['T1']
+            s2 = s['S2']
+            d2 = s['D2']
+            t2 = s['T2']
+            s3 = s['S3']
+            d3 = s['D3']
+            t3 = s['T3']
+            if s['status'] == 'not completed':
+                res += f'Заказ {num}\n{lname_ind} {fname_ind} {sname_ind}, {add_ind}, {sq_ind} кв. м\nУслуга 1: {s1}, {d1}, {t1}\nУслуга 2: {s2}, {d2}, {t2}\nУслуга 3: {s3}, {d3}, {t3}\n\n'
+    res = res[:-4:]
+    window['-ASSIGN-'].update(res)
+    conn.close()
+
     while True:
         event, values = window.read()
         if event == sg.WINDOW_CLOSED or event == 'Выйти':
             break
 
-        res = ''
-        conn = sqlite3.connect('Cleaning_Company.db')
-        c = conn.cursor()
-        c.execute(
-            'SELECT ID_Entities FROM Employees_Entities WHERE Passport_SN_Employees=?', (login,))
-        c1 = c.fetchall()
-        for row in c1:
-            c.execute('SELECT * FROM Entities WHERE ID=?', (row[0],))
-            name_ent = c.fetchone()[1]
-            sq_ent = c.fetchone()[2]
-            add_ent = c.fetchone()[3]
-            User = Query()
-            search = ord_db.search(User.id == row[0])
-            for s in search:
-                num = s['num']
-                s1 = s['S1']
-                d1 = s['D1']
-                t1 = s['T1']
-                s2 = s['S2']
-                d2 = s['D2']
-                t2 = s['T2']
-                s3 = s['S3']
-                d3 = s['D3']
-                t3 = s['T3']
-                if s['status'] == 'not completed':
-                    res += f'Заказ {num}\n{name_ent}, {add_ent}, {sq_ent} кв. м\nУслуга 1: {s1}, {d1}, {t1}\nУслуга 2: {s2}, {d2}, {t2}\nУслуга 3: {s3}, {d3}, {t3}\n\n'
-
-        c.execute(
-            'SELECT Passport_SN_Individuals FROM Employees_Individuals WHERE Passport_SN_Employees=?', (login,))
-        c2 = c.fetchall()
-        for row in c2:
-            c.execute(
-                'SELECT * FROM Individuals WHERE Passport_SN=?', (row[0],))
-            fname_ind = c.fetchone()[1]
-            sname_ind = c.fetchone()[2]
-            lname_ind = c.fetchone()[3]
-            sq_ind = c.fetchone()[5]
-            add_ind = c.fetchone()[4]
-            User = Query()
-            search = ord_db.search(User.id == row[0])
-            for s in search:
-                num = s['num']
-                s1 = s['S1']
-                d1 = s['D1']
-                t1 = s['T1']
-                s2 = s['S2']
-                d2 = s['D2']
-                t2 = s['T2']
-                s3 = s['S3']
-                d3 = s['D3']
-                t3 = s['T3']
-                if s['status'] == 'not completed':
-                    res += f'Заказ {num}\n{lname_ind} {fname_ind} {sname_ind}, {add_ind}, {sq_ind} кв. м\nУслуга 1: {s1}, {d1}, {t1}\nУслуга 2: {s2}, {d2}, {t2}\nУслуга 3: {s3}, {d3}, {t3}\n\n'
-        res = res[:-4:]
-        window['-ASSIGN-'].update(res)
-        conn.close()
     window.close()
 
 
