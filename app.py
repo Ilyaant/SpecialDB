@@ -560,7 +560,7 @@ def user_create_order_ind(login):
                 c.execute('INSERT INTO Orders (ID_Work_Spec, O_Date) values (?,?)',
                           (id_work_spec, str(date.today())))
                 c.execute(
-                    'SELECT ID FROM Orders WHERE ID_Work_Spec=?', (id_work_spec,))
+                    'SELECT Number FROM Orders WHERE ID_Work_Spec=?', (id_work_spec,))
                 id_order = c.fetchone()[0]
                 contract = (
                     udb.get(login)[1],
@@ -698,7 +698,7 @@ def user_create_order_ent(login):
                 c.execute('INSERT INTO Orders (ID_Work_Spec, O_Date) values (?,?)',
                           (id_work_spec, str(date.today())))
                 c.execute(
-                    'SELECT ID FROM Orders WHERE ID_Work_Spec=?', (id_work_spec,))
+                    'SELECT Number FROM Orders WHERE ID_Work_Spec=?', (id_work_spec,))
                 id_order = c.fetchone()[0]
                 ent_name = udb.get(login)[1]
                 c.execute('SELECT ID FROM Entities WHERE Naming=?', (ent_name,))
