@@ -188,10 +188,18 @@ def admin_list_clients():
             break
         conn = sqlite3.connect('Cleaning_Company.db')
         c = conn.cursor()
+        res_inds = 'Паспорт Фамилия Имя Отчество Адрес Площадь\n\n'
         c.execute('SELECT * FROM Individuals')
-        window['-IND-'].update(c.fetchall())
+        inds = c.fetchall()
+        for ind in inds:
+            res_inds += f'{ind[0]} {ind[3]} {ind[2]} {ind[1]} {ind[4]}, {ind[5]} кв. м\n'
+        window['-IND-'].update(res_inds)
+        res_ents = 'Название Адрес Площадь\n\n'
         c.execute('SELECT * FROM Entities')
-        window['-ENT-'].update(c.fetchall())
+        ents = c.fetchall()
+        for ent in ents:
+            res_ents += f'{ent[1]} {ent[3]}, {ent[2]} кв. м\n'
+        window['-ENT-'].update(res_ents)
         conn.close()
     window.close()
 
@@ -211,8 +219,17 @@ def admin_list_workers():
             break
         conn = sqlite3.connect('Cleaning_Company.db')
         c = conn.cursor()
+        res_emps = 'Паспорт Фамилия Имя Отчество Должность Зарплата Дата рождения Дата выхода на работу\n\n'
         c.execute('SELECT * FROM Employees')
-        window['-EMP-'].update(c.fetchall())
+        emps = c.fetchall()
+        for emp in emps:
+            id_pos = emp[1]
+            c.execute('SELECT Naming FROM Positions WHERE ID=?', (id_pos,))
+            pos_name = c.fetchone()[0]
+            c.execute('SELECT Salary FROM Positions WHERE ID=?', (id_pos,))
+            sal = int(c.fetchone()[0])
+            res_emps += f'{emp[0]} {emp[4]} {emp[3]} {emp[2]} {pos_name} {sal} {emp[5]} {emp[6]}\n'
+        window['-EMP-'].update(res_emps)
         conn.close()
     window.close()
 
@@ -220,8 +237,10 @@ def admin_list_workers():
 # Функция для просмотра всех договоров
 def admin_list_contracts():
     layout = [
-        [sg.Text('Договоры:')],
-        [sg.Multiline(key='-CON-', size=(50, 5))],
+        [sg.Text('Договоры c юридическими лицами:')],
+        [sg.Multiline(key='-CON_ENT-', size=(50, 5))],
+        [sg.Text('Договоры c физическими лицами:')],
+        [sg.Multiline(key='-CON_IND-', size=(50, 5))],
         [sg.Push(), sg.Button('Закрыть')]
     ]
 
@@ -232,8 +251,18 @@ def admin_list_contracts():
             break
         conn = sqlite3.connect('Cleaning_Company.db')
         c = conn.cursor()
+        res_contr_ent = 'Номер Название компании Название договора Дата подписания Номер заказа\n\n'
         c.execute('SELECT * FROM Contracts')
-        window['-CON-'].update(c.fetchall())
+        contrs_ent = c.fetchall()
+        for c in contrs_ent:
+            res_contr_ent += f'{c[0]} {c[1]} {c[2]} {c[3]} {c[4]}'
+        window['-CON_ENT-'].update(res_contr_ent)
+        res_contr_ind = 'Номер Паспорт Название договора Дата подписания Номер заказа\n\n'
+        c.execute('SELECT * FROM Contracts')
+        contrs_ind = c.fetchall()
+        for c in contrs_ind:
+            res_contr_ind += f'{c[0]} {c[1]} {c[2]} {c[3]} {c[4]}'
+        window['-CON_IND-'].update(res_contr_ind)
         conn.close()
     window.close()
 
@@ -241,8 +270,10 @@ def admin_list_contracts():
 # Функция для просмотра всех заказов
 def admin_list_orders():
     layout = [
-        [sg.Text('Заказы:')],
-        [sg.Multiline(key='-ORD-', size=(50, 5))],
+        [sg.Text('Заказы юридических лиц:')],
+        [sg.Multiline(key='-ORD_ENT-', size=(50, 5))],
+        [sg.Text('Заказы физических лиц:')],
+        [sg.Multiline(key='-ORD_IND-', size=(50, 5))],
         [sg.Push(), sg.Button('Закрыть')]
     ]
 
@@ -251,11 +282,24 @@ def admin_list_orders():
         event, values = window.read()
         if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
             break
-        conn = sqlite3.connect('Cleaning_Company.db')
-        c = conn.cursor()
-        c.execute('SELECT * FROM Orders')
-        window['-ORD-'].update(c.fetchall())
-        conn.close()
+        # conn = sqlite3.connect('Cleaning_Company.db')
+        # c = conn.cursor()
+        # c.execute('SELECT * FROM Orders')
+        # window['-ORD-'].update(c.fetchall())
+        # conn.close()
+        res_ent = ''
+        res_ind = ''
+        search = ord_db.all()
+        for s in search:
+            login = s['login']
+            if udb.get(login)[-1] == 'ent':
+                res_ent += f'Заказ {s["num"]} от {udb.get(login)[1]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
+            if udb.get(login)[-1] == 'ind':
+                res_ind += f'Заказ {s["num"]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
+        res_ent = res_ent[:-4:]
+        res_ind = res_ind[:-4:]
+        window['-ORD_ENT-'].update(res_ent)
+        window['-ORD_IND-'].update(res_ind)
     window.close()
 
 
@@ -722,7 +766,7 @@ def user_list_orders(login):
                 res += f"Услуга 2: {mo['S2']}, {mo['D2']}, {mo['T2']}\n"
                 res += f"Услуга 3: {mo['S3']}, {mo['D3']}, {mo['T3']}\n"
                 res += f"Стоимость: {mo['cost']} руб.\n\n"
-            res = res[:-4]
+            res = res[:-4:]
             window['-MYORD-'].update(res)
 
 
