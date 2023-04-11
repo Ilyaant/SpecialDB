@@ -844,13 +844,13 @@ def user_list_orders(login):
 def user_give_feedback():
     layout = [
         [sg.Text('Номер заказа:')],
-        [sg.InputText(key='-ORDNUM-')],
+        [sg.InputText(key='-ORDNUM-', do_not_clear=False)],
         [sg.Text(
             'Оцените услуги от 1 до 5, где 1 - очень плохо, 5 - очень хорошо')],
         [sg.Text('Качество работ:'), sg.Combo(
             ['5', '4', '3', '2', '1'], key='-CR1-', default_value='5')],
         [sg.Text('Комментарий:')],
-        [sg.Multiline(key='-COMM-', size=(50, 5))],
+        [sg.Multiline(key='-COMM-', size=(50, 5), do_not_clear=False)],
         [sg.Button('Оставить отзыв'), sg.Push(), sg.Button('Отмена')]
     ]
 
@@ -863,7 +863,7 @@ def user_give_feedback():
         if event == 'Оставить отзыв':
             rdb.set(values['-ORDNUM-'], [values['-CR1-'], values['-COMM-']])
             rdb.dump()
-            break
+            sg.Popup('Отзыв оставлен успешно, спасибо!', title='Успешно')
 
     window.close()
 
@@ -989,8 +989,6 @@ while True:
                     break
                 if event_a == 'Добавить услугу':
                     admin_add_service()
-                # if event_a == 'Добавить тип работ':
-                #     admin_add_work_type()
                 if event_a == 'Добавить должность':
                     admin_add_position()
                 if event_a == 'Добавить сотрудника':
