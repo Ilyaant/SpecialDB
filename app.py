@@ -152,17 +152,23 @@ def admin_add_worker():
                 conn = sqlite3.connect('Cleaning_Company.db')
                 c = conn.cursor()
                 id_pos = None
-                for row in c.execute("SELECT * FROM Positions WHERE Naming=?", (values['-WPOS-'])):
-                    id_pos = row[0]
+                c.execute("SELECT * FROM Positions WHERE Naming=?",
+                          (values['-WPOS-'],))
+                id_pos = c.fetchone()[0]
                 worker = (int(values['-WSN-']), id_pos, values['-WFNAME-'],
                           values['-WSNAME-'], values['-WLNAME-'], values['-WBDATE-'], values['-WHDATE-'])
+                conn.close()
             except:
                 sg.Popup('Ошибка. Проверьте введенные данные', title='Ошибка')
             else:
                 conn = sqlite3.connect('Cleaning_Company.db')
                 c = conn.cursor()
+                c.execute('SELECT Salary FROM Positions WHERE ID=?', (id_pos,))
+                sal = int(c.fetchone()[0])
+                worker = (int(values['-WSN-']), id_pos, values['-WFNAME-'],
+                          values['-WSNAME-'], values['-WLNAME-'], sal, values['-WBDATE-'], values['-WHDATE-'])
                 c.execute(
-                    'INSERT INTO Employees (Passport_SN, ID_Positions, F_Name, S_Name, L_Name, Date_Birth, Date_hire) VALUES (?,?,?,?,?,?,?)', worker)
+                    'INSERT INTO Employees (Passport_SN, ID_Positions, F_Name, S_Name, L_Name, Salary, Date_Birth, Date_hire) VALUES (?,?,?,?,?,?,?,?)', worker)
                 conn.commit()
                 conn.close()
                 udb.set(values['-WSN-'], [values['-WLNAME-'], 'wrk'])
@@ -316,6 +322,7 @@ def admin_list_services():
         event, values = window.read()
         if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
             break
+
         conn = sqlite3.connect('Cleaning_Company.db')
         c = conn.cursor()
         res_serv = 'Название Стоимость (кв. м)\n\n'
@@ -325,6 +332,8 @@ def admin_list_services():
             res_serv += f'{s[1]} {s[2]}\n'
         window['-SERV-'].update(res_serv)
         conn.close()
+        # window['-SERV-'].print('res_serv')
+
     window.close()
 
 
@@ -402,18 +411,22 @@ def admin_assign_worker():
 # Функция для регистрации физлица
 def register_ind():
     layout = [
-        [sg.Text('Логин:'), sg.InputText(key='-LOGIN-')],
-        [sg.Text('Пароль:'), sg.InputText(key='-PASSIN-', password_char='*')],
-        [sg.Text('Серия и номер паспорта:'), sg.InputText(key='-PASSPORTSN-')],
-        [sg.Text('Фамилия:'), sg.InputText(key='-LNAME-')],
-        [sg.Text('Имя:'), sg.InputText(key='-FNAME-')],
-        [sg.Text('Отчество:'), sg.InputText(key='-SNAME-')],
-        [sg.Text('Адрес:'), sg.InputText(key='-ADDIN-')],
-        [sg.Text('Площадь помещения (кв. м):'), sg.InputText(key='-SQIN-')],
-        [sg.Button('Зарегистрироваться'), sg.Push(), sg.Button('Отмена')],
+        [sg.Push(), sg.Text('Логин:'), sg.InputText(key='-LOGIN-')],
+        [sg.Push(), sg.Text('Пароль:'), sg.InputText(
+            key='-PASSIN-', password_char='*')],
+        [sg.Push(), sg.Text('Серия и номер паспорта:'),
+         sg.InputText(key='-PASSPORTSN-')],
+        [sg.Push(), sg.Text('Фамилия:'), sg.InputText(key='-LNAME-')],
+        [sg.Push(), sg.Text('Имя:'), sg.InputText(key='-FNAME-')],
+        [sg.Push(), sg.Text('Отчество:'), sg.InputText(key='-SNAME-')],
+        [sg.Push(), sg.Text('Адрес:'), sg.InputText(key='-ADDIN-')],
+        [sg.Push(), sg.Text('Площадь помещения (кв. м):'),
+         sg.InputText(key='-SQIN-')],
+        [sg.Push(), sg.Button('Зарегистрироваться'),
+         sg.Push(), sg.Button('Отмена')],
     ]
 
-    window = sg.window('Регистрация физического лица', layout)
+    window = sg.Window('Регистрация физического лица', layout)
     while True:
         event, values = window.read()
         if event == sg.WINDOW_CLOSED or event == 'Отмена':
@@ -447,15 +460,19 @@ def register_ind():
 # Функция для регистрации юрлица
 def register_ent():
     layout = [
-        [sg.Text('Логин:'), sg.InputText(key='-LOGIN-')],
-        [sg.Text('Пароль:'), sg.InputText(key='-PASSIN-', password_char='*')],
-        [sg.Text('Название организации:'), sg.InputText(key='-ENTNAME-')],
-        [sg.Text('Адрес:'), sg.InputText(key='-ADDENT-')],
-        [sg.Text('Площадь помещений (кв. м):'), sg.InputText(key='-SQENT-')],
-        [sg.Button('Зарегистрироваться'), sg.Push(), sg.Button('Отмена')],
+        [sg.Push(), sg.Text('Логин:'), sg.InputText(key='-LOGIN-')],
+        [sg.Push(), sg.Text('Пароль:'), sg.InputText(
+            key='-PASSIN-', password_char='*')],
+        [sg.Push(), sg.Text('Название организации:'),
+         sg.InputText(key='-ENTNAME-')],
+        [sg.Push(), sg.Text('Адрес:'), sg.InputText(key='-ADDENT-')],
+        [sg.Push(), sg.Text('Площадь помещений (кв. м):'),
+         sg.InputText(key='-SQENT-')],
+        [sg.Push(), sg.Button('Зарегистрироваться'),
+         sg.Push(), sg.Button('Отмена')],
     ]
 
-    window = sg.window('Регистрация юридического лица', layout)
+    window = sg.Window('Регистрация юридического лица', layout)
     while True:
         event, values = window.read()
         if event == sg.WINDOW_CLOSED or event == 'Отмена':
@@ -528,6 +545,7 @@ def user_create_order_ind(login):
             id_order = None
             id_contract = None
             if values['-S1-'] and values['-D1-'] and values['-T1-']:
+                conn = sqlite3.connect('Cleaning_Company.db')
                 c = conn.cursor()
                 c.execute('INSERT INTO Work_Spec (W_Date, W_Time) values (?,?)',
                           (values['-D1-'], values['-T1-']))
@@ -572,6 +590,7 @@ def user_create_order_ind(login):
                 conn.commit()
                 conn.close()
                 if values['-S2-'] and values['-D2-'] and values['-T2-']:
+                    conn = sqlite3.connect('Cleaning_Company.db')
                     c = conn.cursor()
                     c.execute('INSERT INTO Work_Spec (ID, W_Date, W_Time) values (?,?,?)',
                               (id_work_spec, values['-D2-'], values['-T2-']))
@@ -592,6 +611,7 @@ def user_create_order_ind(login):
                     conn.commit()
                     conn.close()
                 if values['-S3-'] and values['-D3-'] and values['-T3-']:
+                    conn = sqlite3.connect('Cleaning_Company.db')
                     c = conn.cursor()
                     c.execute('INSERT INTO Work_Spec (ID, W_Date, W_Time) values (?,?,?)',
                               (id_work_spec, values['-D3-'], values['-T3-']))
@@ -663,6 +683,7 @@ def user_create_order_ent(login):
             id_order = None
             id_contract = None
             if values['-S1-'] and values['-D1-'] and values['-T1-']:
+                conn = sqlite3.connect('Cleaning_Company.db')
                 c = conn.cursor()
                 c.execute('INSERT INTO Work_Spec (W_Date, W_Time) values (?,?)',
                           (values['-D1-'], values['-T1-']))
@@ -710,6 +731,7 @@ def user_create_order_ent(login):
                 conn.commit()
                 conn.close()
                 if values['-S2-'] and values['-D2-'] and values['-T2-']:
+                    conn = sqlite3.connect('Cleaning_Company.db')
                     c = conn.cursor()
                     c.execute('INSERT INTO Work_Spec (ID, W_Date, W_Time) values (?,?,?)',
                               (id_work_spec, values['-D2-'], values['-T2-']))
@@ -730,6 +752,7 @@ def user_create_order_ent(login):
                     conn.commit()
                     conn.close()
                 if values['-S3-'] and values['-D3-'] and values['-T3-']:
+                    conn = sqlite3.connect('Cleaning_Company.db')
                     c = conn.cursor()
                     c.execute('INSERT INTO Work_Spec (ID, W_Date, W_Time) values (?,?,?)',
                               (id_work_spec, values['-D3-'], values['-T3-']))
@@ -905,8 +928,9 @@ sg.theme('sandy beach')  # цветовая тема приложения
 # интерфейс главного окна
 layout = [
     [sg.Text('Пожалуйста, выполните вход')],
-    [sg.Push(), sg.Text('Логин:'), sg.InputText(key='-LOGIN-')],
-    [sg.Push(), sg.Text('Пароль:'), sg.InputText(key='-PASS-', password_char='*')],
+    [sg.Push(), sg.Text('Логин:'), sg.InputText(key='-LOGIN-', do_not_clear=False)],
+    [sg.Push(), sg.Text('Пароль:'), sg.InputText(
+        key='-PASS-', password_char='*', do_not_clear=False)],
     [sg.Push(), sg.Button('Войти'), sg.Push()],
     [sg.Push(), sg.Button('Регистрация физ. лица'),
      sg.Button('Регистрация юр. лица'), sg.Push()],
@@ -964,7 +988,7 @@ while True:
             window_admin.close()
 
         # запуск окна пользователя (физ. лица)
-        elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'ind':
+        elif udb.get(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'ind':
             window_user = user_window()
             while True:
                 event_u, values_u = window_user.read()
@@ -979,7 +1003,7 @@ while True:
             window_user.close()
 
         # запуск окна пользователя (юр. лица)
-        elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'ent':
+        elif udb.get(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'ent':
             window_user = user_window()
             while True:
                 event_u, values_u = window_user.read()
@@ -994,7 +1018,7 @@ while True:
             window_user.close()
 
         # запуск окна работника
-        elif udb.dexists(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'wrk':
+        elif udb.get(values['-LOGIN-']) and udb.get(values['-LOGIN-'])[0] == values['-PASS-'] and udb.get(values['-LOGIN-'])[-1] == 'wrk':
             worker_window(int(values['-LOGIN-']))
 
         # обработка ошибки ввода неизвестного логина и пароля
