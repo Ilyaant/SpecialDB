@@ -324,6 +324,7 @@ def admin_list_services():
         for s in serv:
             res_serv += f'{s[1]} {s[2]}\n'
         window['-SERV-'].update(res_serv)
+        conn.close()
     window.close()
 
 
@@ -393,8 +394,7 @@ def admin_assign_worker():
                     res += f'Заказ {s["num"]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
                 res = res[:-4:]
                 window['-ORD-'].update(res)
-
-        window.close()
+    window.close()
 
 ######################################## USER ######################################################
 
@@ -441,6 +441,7 @@ def register_ind():
                         int(values['-PASSPORTSN-']), 'ind'])
                 udb.dump()
                 break
+    window.close()
 
 
 # Функция для регистрации юрлица
@@ -479,6 +480,7 @@ def register_ent():
                         str(values['-ENTNAME-']), 'ent'])
                 udb.dump()
                 break
+    window.close()
 
 
 # Функция для вывода окна пользователя
@@ -792,6 +794,7 @@ def user_list_orders(login):
                 res += f"Стоимость: {mo['cost']} руб.\n\n"
             res = res[:-4:]
             window['-MYORD-'].update(res)
+    window.close()
 
 
 # Функция для обратной связи по заказу
