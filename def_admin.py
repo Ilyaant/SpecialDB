@@ -331,6 +331,38 @@ def admin_edit_worker():
 
     window.close()
 
+# Функция для удаления работника
+
+
+def admin_delete_worker():
+    conn = sqlite3.connect('Cleaning_Company.db')
+    c = conn.cursor()
+    c.execute('SELECT Passport_SN FROM Employees')
+    combo = []
+    for emp in c.fetchall():
+        combo.append(emp[0])
+
+    layout = [
+        [sg.Text('Выберите сотрудника для удаления:')],
+        [sg.Combo(combo, key='-WRK-')],
+        [sg.Push(), sg.Button('Удалить', button_color='red'), sg.Button('Отмена')]
+    ]
+
+    window = sg.Window('Удаление сотрудника', layout)
+    while True:
+        event, values = window.read()
+        if event == 'Отмена' or event == sg.WINDOW_CLOSED:
+            break
+
+        if event == 'Удалить':
+            ans = sg.popup_yes_no(
+                'Действительно удалить сотрудника?', title='Подтверждение')
+            if ans == 'Yes':
+                worker_cascade_delete(int(values['-WRK-']))
+                sg.Popup('Удаление успешно', title='Успешно')
+
+    window.close()
+
 
 # Функция для просмотра всех клиентов
 def admin_list_clients():

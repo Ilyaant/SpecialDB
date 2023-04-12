@@ -67,6 +67,8 @@ while True:
                     admin_list_services()
                 if event_a == 'Редактировать сотрудника':
                     admin_edit_worker()
+                if event_a == 'Удалить сотрудника':
+                    admin_delete_worker()
             window_admin.close()
 
         # запуск окна пользователя (физ. лица)
