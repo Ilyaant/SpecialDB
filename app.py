@@ -16,13 +16,12 @@ def admin_window():
     layout_admin = [
         [sg.Button('Добавить услугу'), sg.Push(),
          sg.Button('Просмотреть клиентов')],
-        [sg.Button('Просмотреть услуги'), sg.Push(),
-         sg.Button('Просмотреть сотрудников')],
         [sg.Button('Добавить должность'), sg.Push(),
-         sg.Button('Просмотреть договоры')],
+         sg.Button('Просмотреть сотрудников')],
         [sg.Button('Добавить сотрудника'), sg.Push(),
+         sg.Button('Просмотреть услуги')],
+        [sg.Button('Назначить сотрудника'), sg.Push(),
          sg.Button('Просмотреть заказы')],
-        [sg.Button('Назначить сотрудника')],
         [sg.Push(), sg.Button('Выйти')]
     ]
     return sg.Window('Клининговая компания. Администратор', layout_admin)
@@ -121,11 +120,19 @@ def admin_add_position():
 
 # Функция для добавления нового работника
 def admin_add_worker():
+    conn = sqlite3.connect('Cleaning_Company.db')
+    c = conn.cursor()
+    c.execute('SELECT Naming FROM Positions')
+    combo = []
+    for pos in c.fetchall():
+        combo.append(pos[0])
+    conn.close()
+
     layout = [
         [sg.Text('Серия и номер паспорта:')],
         [sg.InputText(key='-WSN-')],
         [sg.Text('Должность:')],
-        [sg.InputText(key='-WPOS-')],
+        [sg.Combo(combo, key='-WPOS-')],
         [sg.Text('Имя:')],
         [sg.InputText(key='-WFNAME-')],
         [sg.Text('Отчество:')],
@@ -300,11 +307,20 @@ def admin_list_orders():
     for s in search:
         login = s['login']
         if udb.get(login)[-1] == 'ent':
-            res_ent += f'Заказ {s["num"]} от {udb.get(login)[1]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
+            res_ent += f'Заказ {s["num"]} от {udb.get(login)[1]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\n'
+            if s['S2'] != '':
+                res_ent += f'Услуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\n'
+                if s['S3'] != '':
+                    res_ent += f'Услуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n'
+            res_ent += '\n'
         if udb.get(login)[-1] == 'ind':
-            res_ind += f'Заказ {s["num"]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
-    res_ent = res_ent
-    res_ind = res_ind
+            res_ind += f'Заказ {s["num"]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\n'
+            if s['S2'] != '':
+                res_ind += f'Услуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\n'
+                if s['S3'] != '':
+                    res_ind += f'Услуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n'
+            res_ind += '\n'
+
     window['-ORD_ENT-'].update(res_ent)
     window['-ORD_IND-'].update(res_ind)
 
@@ -346,13 +362,26 @@ def admin_list_services():
 
 # Функция для назначения работника на заказ
 def admin_assign_worker():
+    combo = []
+    User = Query()
+    search = ord_db.search(User.status == 'not completed')
+    for s in search:
+        combo.append(s['num'])
+
+    combo2 = []
+    conn = sqlite3.connect('Cleaning_Company.db')
+    c = conn.cursor()
+    c.execute('SELECT Passport_SN FROM Employees')
+    for w in c.fetchall():
+        combo2.append(w[0])
+    conn.close()
+
     layout = [
         [sg.Text('Список заказов:')],
         [sg.Multiline(key='-ORD-', size=(50, 5))],
-        [sg.Text('Номер заказа:'), sg.InputText(
-            key='-ORDNUM-', do_not_clear=False)],
+        [sg.Text('Номер заказа:'), sg.Combo(combo, key='-ORDNUM-')],
         [sg.Text('Серия и номер паспорта сотрудника:'),
-         sg.InputText(key='-WRK-', do_not_clear=False)],
+         sg.Combo(combo2, key='-WRK-')],
         [sg.Button('Назначить'), sg.Push(), sg.Button('Отмена')]
     ]
 
@@ -362,7 +391,12 @@ def admin_assign_worker():
     User = Query()
     search = ord_db.search(User.status == 'not completed')
     for s in search:
-        res += f'Заказ {s["num"]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\nУслуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\nУслуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n\n'
+        res += f'Заказ {s["num"]}\nУслуга 1: {s["S1"]}, {s["D1"]}, {s["T1"]}\n'
+        if s['S2'] != '':
+            res += f'Услуга 2: {s["S2"]}, {s["D2"]}, {s["T2"]}\n'
+            if s['S3'] != '':
+                res += f'Услуга 3: {s["S3"]}, {s["D3"]}, {s["T3"]}\n'
+        res += '\n'
     window['-ORD-'].update(res)
 
     while True:
@@ -520,17 +554,25 @@ def user_window():
 
 # Функция для создания заказа физ. лица
 def user_create_order_ind(login):
+    conn = sqlite3.connect('Cleaning_Company.db')
+    c = conn.cursor()
+    c.execute('SELECT Naming FROM C_Services')
+    combo = []
+    for serv in c.fetchall():
+        combo.append(serv[0])
+    conn.close()
+
     layout = [
         [sg.Text('Доступные услуги и их цена за кв. м:')],
         [sg.Multiline(key='-SERV-', size=(50, 5))],
         [sg.Text('Выберите до 3-х услуг для заказа:')],
-        [sg.Push(), sg.Text('Услуга 1:'), sg.InputText(key='-S1-'), sg.InputText(key='-D1-'), sg.CalendarButton('Выбрать дату',
-                                                                                                                close_when_date_chosen=True, target='-D1-', format='%Y-%m-%d'), sg.Text('Время (чч:мм:сс):'), sg.InputText(key='-T1-')],
-        [sg.Push(), sg.Text('Услуга 2:'), sg.InputText(key='-S2-'), sg.InputText(key='-D2-'), sg.CalendarButton('Выбрать дату',
-                                                                                                                close_when_date_chosen=True, target='-D2-', format='%Y-%m-%d'), sg.Text('Время (чч:мм:сс):'), sg.InputText(key='-T2-')],
-        [sg.Push(), sg.Text('Услуга 3:'), sg.InputText(key='-S3-'), sg.InputText(key='-D3-'), sg.CalendarButton('Выбрать дату',
-                                                                                                                close_when_date_chosen=True, target='-D3-', format='%Y-%m-%d'), sg.Text('Время (чч:мм:сс):'), sg.InputText(key='-T3-')],
-        [sg.Text('Стоимость услуг:'), sg.Text('0', key='-COST-')],
+        [sg.Push(), sg.Text('Услуга 1:'), sg.Combo(combo, key='-S1-'), sg.InputText(key='-D1-'), sg.CalendarButton('Выбрать дату',
+                                                                                                                   close_when_date_chosen=True, target='-D1-', format='%Y-%m-%d'), sg.Text('Время (чч:мм):'), sg.InputText(key='-T1-')],
+        [sg.Push(), sg.Text('Услуга 2:'), sg.Combo(combo, key='-S2-'), sg.InputText(key='-D2-'), sg.CalendarButton('Выбрать дату',
+                                                                                                                   close_when_date_chosen=True, target='-D2-', format='%Y-%m-%d'), sg.Text('Время (чч:мм):'), sg.InputText(key='-T2-')],
+        [sg.Push(), sg.Text('Услуга 3:'), sg.Combo(combo, key='-S3-'), sg.InputText(key='-D3-'), sg.CalendarButton('Выбрать дату',
+                                                                                                                   close_when_date_chosen=True, target='-D3-', format='%Y-%m-%d'), sg.Text('Время (чч:мм):'), sg.InputText(key='-T3-')],
+        [sg.Text('Стоимость услуг:'), sg.Text('0 руб.', key='-COST-')],
         [sg.Button('Создать заказ'), sg.Push(), sg.Button('Отмена')]
     ]
 
@@ -560,9 +602,9 @@ def user_create_order_ind(login):
                 conn = sqlite3.connect('Cleaning_Company.db')
                 c = conn.cursor()
                 c.execute('INSERT INTO Work_Spec (W_Date, W_Time) values (?,?)',
-                          (values['-D1-'], values['-T1-']))
+                          (values['-D1-'], values['-T1-'] + ':00'))
                 c.execute('SELECT ID FROM Work_Spec WHERE W_Date=? AND W_Time=?',
-                          (values['-D1-'], values['-T1-']))
+                          (values['-D1-'], values['-T1-'] + ':00'))
                 id_work_spec = c.fetchone()[0]
                 c.execute('SELECT ID FROM Work_Types WHERE Naming=?',
                           (values['-S1-'],))
@@ -598,14 +640,14 @@ def user_create_order_ind(login):
                 c.execute(
                     'SELECT Cost_m2 FROM C_Services WHERE Naming=?', (values['-S1-'],))
                 cost += square * int(c.fetchone()[0])
-                window['-COST-'].update(cost)
+                window['-COST-'].update(f'{cost} руб.')
                 conn.commit()
                 conn.close()
                 if values['-S2-'] and values['-D2-'] and values['-T2-']:
                     conn = sqlite3.connect('Cleaning_Company.db')
                     c = conn.cursor()
                     c.execute('INSERT INTO Work_Spec (W_Date, W_Time) values (?,?)',
-                              (values['-D2-'], values['-T2-']))
+                              (values['-D2-'], values['-T2-'] + ':00'))
                     c.execute('SELECT ID FROM Work_Types WHERE Naming=?',
                               (values['-S2-'],))
                     id_work_type = c.fetchone()[0]
@@ -619,14 +661,14 @@ def user_create_order_ind(login):
                     c.execute(
                         'SELECT Cost_m2 FROM C_Services WHERE Naming=?', (values['-S2-'],))
                     cost += square * int(c.fetchone()[0])
-                    window['-COST-'].update(cost)
+                    window['-COST-'].update(f'{cost} руб.')
                     conn.commit()
                     conn.close()
                 if values['-S3-'] and values['-D3-'] and values['-T3-']:
                     conn = sqlite3.connect('Cleaning_Company.db')
                     c = conn.cursor()
                     c.execute('INSERT INTO Work_Spec (W_Date, W_Time) values (?,?)',
-                              (values['-D3-'], values['-T3-']))
+                              (values['-D3-'], values['-T3-'] + ':00'))
                     c.execute('SELECT ID FROM Work_Types WHERE Naming=?',
                               (values['-S3-'],))
                     id_work_type = c.fetchone()[0]
@@ -640,17 +682,17 @@ def user_create_order_ind(login):
                     c.execute(
                         'SELECT Cost_m2 FROM C_Services WHERE Naming=?', (values['-S3-'],))
                     cost += square * int(c.fetchone()[0])
-                    window['-COST-'].update(cost)
+                    window['-COST-'].update(f'{cost} руб.')
                     conn.commit()
                     conn.close()
                 sg.Popup(
-                    f'Заказ создан успешно!\nНомер заказа: {id_order}\nНомер договора: {id_contract}\nСтоимость услуг: {cost}', title='Успешно')
+                    f'Заказ создан успешно!\nНомер заказа: {id_order}\nСтоимость услуг: {cost} руб.', title='Успешно')
                 ord_db.insert({
                     'login': login,
                     'id': udb.get(login)[1],
-                    'S1': values['-S1-'], 'D1': values['-D1-'], 'T1': values['-T1-'],
-                    'S2': values['-S2-'], 'D2': values['-D2-'], 'T2': values['-T2-'],
-                    'S3': values['-S3-'], 'D3': values['-D3-'], 'T3': values['-T3-'],
+                    'S1': values['-S1-'], 'D1': values['-D1-'], 'T1': values['-T1-'] + ':00',
+                    'S2': values['-S2-'], 'D2': values['-D2-'], 'T2': values['-T2-'] + ':00',
+                    'S3': values['-S3-'], 'D3': values['-D3-'], 'T3': values['-T3-'] + ':00',
                     'num': id_order,
                     'cost': cost,
                     'status': 'not completed'
@@ -663,17 +705,25 @@ def user_create_order_ind(login):
 
 # Функция для создания заказа юр. лица
 def user_create_order_ent(login):
+    conn = sqlite3.connect('Cleaning_Company.db')
+    c = conn.cursor()
+    c.execute('SELECT Naming FROM C_Services')
+    combo = []
+    for serv in c.fetchall():
+        combo.append(serv[0])
+    conn.close()
+
     layout = [
         [sg.Text('Доступные услуги и их цена за кв. м:')],
         [sg.Multiline(key='-SERV-', size=(50, 5))],
         [sg.Text('Выберите до 3-х услуг для заказа:')],
-        [sg.Push(), sg.Text('Услуга 1:'), sg.InputText(key='-S1-'), sg.InputText(key='-D1-'), sg.CalendarButton('Выбрать дату',
-                                                                                                                close_when_date_chosen=True, target='-D1-', format='%Y-%m-%d'), sg.Text('Время (чч:мм:сс):'), sg.InputText(key='-T1-')],
-        [sg.Push(), sg.Text('Услуга 2:'), sg.InputText(key='-S2-'), sg.InputText(key='-D2-'), sg.CalendarButton('Выбрать дату',
-                                                                                                                close_when_date_chosen=True, target='-D2-', format='%Y-%m-%d'), sg.Text('Время (чч:мм:сс):'), sg.InputText(key='-T2-')],
-        [sg.Push(), sg.Text('Услуга 3:'), sg.InputText(key='-S3-'), sg.InputText(key='-D3-'), sg.CalendarButton('Выбрать дату',
-                                                                                                                close_when_date_chosen=True, target='-D3-', format='%Y-%m-%d'), sg.Text('Время (чч:мм:сс):'), sg.InputText(key='-T3-')],
-        [sg.Text('Стоимость услуг:'), sg.Text('0', key='-COST-')],
+        [sg.Push(), sg.Text('Услуга 1:'), sg.Combo(combo, key='-S1-'), sg.InputText(key='-D1-'), sg.CalendarButton('Выбрать дату',
+                                                                                                                   close_when_date_chosen=True, target='-D1-', format='%Y-%m-%d'), sg.Text('Время (чч:мм):'), sg.InputText(key='-T1-')],
+        [sg.Push(), sg.Text('Услуга 2:'), sg.Combo(combo, key='-S2-'), sg.InputText(key='-D2-'), sg.CalendarButton('Выбрать дату',
+                                                                                                                   close_when_date_chosen=True, target='-D2-', format='%Y-%m-%d'), sg.Text('Время (чч:мм):'), sg.InputText(key='-T2-')],
+        [sg.Push(), sg.Text('Услуга 3:'), sg.Combo(combo, key='-S3-'), sg.InputText(key='-D3-'), sg.CalendarButton('Выбрать дату',
+                                                                                                                   close_when_date_chosen=True, target='-D3-', format='%Y-%m-%d'), sg.Text('Время (чч:мм):'), sg.InputText(key='-T3-')],
+        [sg.Text('Стоимость услуг:'), sg.Text('0 руб.', key='-COST-')],
         [sg.Button('Создать заказ'), sg.Push(), sg.Button('Отмена')]
     ]
 
@@ -703,9 +753,9 @@ def user_create_order_ent(login):
                 conn = sqlite3.connect('Cleaning_Company.db')
                 c = conn.cursor()
                 c.execute('INSERT INTO Work_Spec (W_Date, W_Time) values (?,?)',
-                          (values['-D1-'], values['-T1-']))
+                          (values['-D1-'], values['-T1-'] + ':00'))
                 c.execute('SELECT ID FROM Work_Spec WHERE W_Date=? AND W_Time=?',
-                          (values['-D1-'], values['-T1-']))
+                          (values['-D1-'], values['-T1-'] + ':00'))
                 id_work_spec = c.fetchone()[0]
                 c.execute('SELECT ID FROM Work_Types WHERE Naming=?',
                           (values['-S1-'],))
@@ -744,14 +794,14 @@ def user_create_order_ent(login):
                 c.execute(
                     'SELECT Cost_m2 FROM C_Services WHERE Naming=?', (values['-S1-'],))
                 cost += square * int(c.fetchone()[0])
-                window['-COST-'].update(cost)
+                window['-COST-'].update(f'{cost} руб.')
                 conn.commit()
                 conn.close()
                 if values['-S2-'] and values['-D2-'] and values['-T2-']:
                     conn = sqlite3.connect('Cleaning_Company.db')
                     c = conn.cursor()
                     c.execute('INSERT INTO Work_Spec (W_Date, W_Time) values (?,?)',
-                              (values['-D2-'], values['-T2-']))
+                              (values['-D2-'], values['-T2-'] + ':00'))
                     c.execute('SELECT ID FROM Work_Types WHERE Naming=?',
                               (values['-S2-'],))
                     id_work_type = c.fetchone()[0]
@@ -765,14 +815,14 @@ def user_create_order_ent(login):
                     c.execute(
                         'SELECT Cost_m2 FROM C_Services WHERE Naming=?', (values['-S2-'],))
                     cost += square * int(c.fetchone()[0])
-                    window['-COST-'].update(cost)
+                    window['-COST-'].update(f'{cost} руб.')
                     conn.commit()
                     conn.close()
                 if values['-S3-'] and values['-D3-'] and values['-T3-']:
                     conn = sqlite3.connect('Cleaning_Company.db')
                     c = conn.cursor()
                     c.execute('INSERT INTO Work_Spec (W_Date, W_Time) values (?,?)',
-                              (values['-D3-'], values['-T3-']))
+                              (values['-D3-'], values['-T3-'] + ':00'))
                     c.execute('SELECT ID FROM Work_Types WHERE Naming=?',
                               (values['-S3-'],))
                     id_work_type = c.fetchone()[0]
@@ -786,17 +836,17 @@ def user_create_order_ent(login):
                     c.execute(
                         'SELECT Cost_m2 FROM C_Services WHERE Naming=?', (values['-S3-'],))
                     cost += square * int(c.fetchone()[0])
-                    window['-COST-'].update(cost)
+                    window['-COST-'].update(f'{cost} руб.')
                     conn.commit()
                     conn.close()
                 sg.Popup(
-                    f'Заказ создан успешно!\nНомер заказа: {id_order}\nНомер договора: {id_contract}\nСтоимость услуг: {cost}', title='Успешно')
+                    f'Заказ создан успешно!\nНомер заказа: {id_order}\nСтоимость услуг: {cost} руб.', title='Успешно')
                 ord_db.insert({
                     'login': login,
                     'id': id_ent,
-                    'S1': values['-S1-'], 'D1': values['-D1-'], 'T1': values['-T1-'],
-                    'S2': values['-S2-'], 'D2': values['-D2-'], 'T2': values['-T2-'],
-                    'S3': values['-S3-'], 'D3': values['-D3-'], 'T3': values['-T3-'],
+                    'S1': values['-S1-'], 'D1': values['-D1-'], 'T1': values['-T1-'] + ':00',
+                    'S2': values['-S2-'], 'D2': values['-D2-'], 'T2': values['-T2-'] + ':00',
+                    'S3': values['-S3-'], 'D3': values['-D3-'], 'T3': values['-T3-'] + ':00',
                     'num': id_order,
                     'cost': cost,
                     'status': 'not completed'
@@ -826,10 +876,12 @@ def user_list_orders(login):
         for mo in my_orders:
             res += f"Номер заказа: {mo['num']}\n"
             res += f"Услуга 1: {mo['S1']}, {mo['D1']}, {mo['T1']}\n"
-            res += f"Услуга 2: {mo['S2']}, {mo['D2']}, {mo['T2']}\n"
-            res += f"Услуга 3: {mo['S3']}, {mo['D3']}, {mo['T3']}\n"
+            if mo['S2'] != '':
+                res += f"Услуга 2: {mo['S2']}, {mo['D2']}, {mo['T2']}\n"
+                if mo['S3'] != '':
+                    res += f"Услуга 3: {mo['S3']}, {mo['D3']}, {mo['T3']}\n"
             res += f"Стоимость: {mo['cost']} руб.\n\n"
-        res = res
+
         window['-MYORD-'].update(res)
 
     while True:
