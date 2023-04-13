@@ -7,9 +7,8 @@ from def_worker import *
 
 sg.theme('sandy beach')  # цветовая тема приложения
 
+
 # Функция для вывода окна админа
-
-
 def admin_window():
     layout_admin = [
         [sg.Button('Добавить услугу'), sg.Push(),
