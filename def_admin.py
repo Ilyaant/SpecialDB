@@ -9,25 +9,6 @@ udb = pickledb.load('users.db', False)
 ord_db = TinyDB('orders.db')
 
 
-# Функция для вывода окна админа
-def admin_window():
-    layout_admin = [
-        [sg.Button('Добавить услугу'), sg.Push(),
-         sg.Button('Просмотреть клиентов')],
-        [sg.Button('Добавить должность'), sg.Push(),
-         sg.Button('Просмотреть сотрудников')],
-        [sg.Button('Добавить сотрудника'), sg.Push(),
-         sg.Button('Просмотреть услуги')],
-        [sg.Button('Назначить сотрудника'), sg.Push(),
-         sg.Button('Просмотреть заказы')],
-        [sg.Push()],
-        [sg.Button('Редактировать сотрудника'),
-         sg.Button('Удалить сотрудника', button_color='red')],
-        [sg.Push(), sg.Button('Выйти')]
-    ]
-    return sg.Window('Клининговая компания. Администратор', layout_admin)
-
-
 # Функция для добавления новой услуги
 def admin_add_service():
     layout = [
