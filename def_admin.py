@@ -100,6 +100,108 @@ def admin_add_position():
     window.close()
 
 
+# Функция для редактирования должности
+def admin_edit_position():
+    conn = sqlite3.connect('Cleaning_Company.db')
+    c = conn.cursor()
+    c.execute('SELECT Naming FROM Positions')
+    combo = []
+    for pos in c.fetchall():
+        combo.append(pos[0])
+    conn.close()
+
+    layout = [
+        [sg.Text('Должность для редактирования:')],
+        [sg.Combo(combo, key='-POS-', enable_events=True)],
+        [sg.Text('Новое название:')],
+        [sg.InputText(key='-NAME-')],
+        [sg.Text('Новая заработная плата:')],
+        [sg.InputText(key='-SAL-')],
+        [sg.Button('Применить'), sg.Push(), sg.Button('Отмена')]
+    ]
+
+    id_pos = None
+
+    window = sg.Window('Редактировать должность', layout)
+    while True:
+        event, values = window.read()
+        if event == 'Отмена' or event == sg.WINDOW_CLOSED:
+            break
+
+        if event == '-POS-':
+            conn = sqlite3.connect('Cleaning_Company.db')
+            c = conn.cursor()
+            c.execute('SELECT * FROM Positions WHERE Naming=?',
+                      (values['-POS-'],))
+            id_pos = c.fetchone()[0]
+            window['-NAME-'].update(c.fetchone()[1])
+            window['-SAL-'].update(c.fetchone()[2])
+            conn.close()
+
+        if event == 'Применить':
+            try:
+                new_sal = int(values['-SAL-'])
+            except:
+                sg.Popup('Ошибка. Проверьте введенные данные', title='Ошибка')
+            else:
+                conn = sqlite3.connect('Cleaning_Company.db')
+                c = conn.cursor()
+                c.execute('UPDATE Positions SET Naming=?, Salary=? WHERE ID=?',
+                          (values['-NAME-'], new_sal, id_pos))
+                c.execute(
+                    'UPDATE Employees SET Salary=? WHERE ID_Positions=?', (new_sal, id_pos))
+                conn.commit()
+                conn.close()
+    window.close()
+
+
+# Функция для удаления должности
+def admin_delete_position():
+    conn = sqlite3.connect('Cleaning_Company.db')
+    c = conn.cursor()
+    c.execute('SELECT Naming FROM Positions')
+    combo = []
+    for pos in c.fetchall():
+        combo.append(pos[0])
+    conn.close()
+
+    layout = [
+        [sg.Text('Должность для удаления:')],
+        [sg.Combo(combo, key='-POS-')],
+        [sg.Button('Удалить', button_color='red'),
+         sg.Push(), sg.Button('Отмена')]
+    ]
+
+    id_pos = None
+
+    window = sg.Window('Редактировать должность', layout)
+    while True:
+        event, values = window.read()
+        if event == 'Отмена' or event == sg.WINDOW_CLOSED:
+            break
+
+        if event == 'Удалить':
+            conn = sqlite3.connect('Cleaning_Company.db')
+            c = conn.cursor()
+            c.execute('SELECT ID FROM Positions WHERE Naming=?',
+                      (values['-POS-'],))
+            id_pos = c.fetchone()[0]
+            conn.close()
+            ans = sg.popup_yes_no(
+                'Действительно удалить должность?', title='Подтверждение')
+            if ans == 'Yes':
+                # conn = sqlite3.connect('Cleaning_Company.db')
+                # c = conn.cursor()
+                # c.execute('UPDATE Employees SET ')
+                # c.execute('DELETE FROM Positions WHERE ID=?', (id_pos,))
+                # conn.commit()
+                # conn.close()
+                position_delete_helper(id_pos)
+                sg.Popup('Удаление успешно', title='Успешно')
+
+    window.close()
+
+
 # Функция для добавления нового работника
 def admin_add_worker():
     conn = sqlite3.connect('Cleaning_Company.db')
@@ -312,9 +414,8 @@ def admin_edit_worker():
 
     window.close()
 
+
 # Функция для удаления работника
-
-
 def admin_delete_worker():
     conn = sqlite3.connect('Cleaning_Company.db')
     c = conn.cursor()

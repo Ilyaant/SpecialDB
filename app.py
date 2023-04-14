@@ -22,6 +22,8 @@ def admin_window():
         [sg.Push()],
         [sg.Button('Редактировать сотрудника'),
          sg.Button('Удалить сотрудника', button_color='red')],
+        [sg.Button('Редактировать должность'),
+         sg.Button('Удалить должность', button_color='red')],
         [sg.Push(), sg.Button('Выйти')]
     ]
     return sg.Window('Клининговая компания. Администратор', layout_admin)
@@ -89,6 +91,10 @@ while True:
                     admin_edit_worker()
                 if event_a == 'Удалить сотрудника':
                     admin_delete_worker()
+                if event_a == 'Редактировать должность':
+                    admin_edit_position()
+                if event_a == 'Удалить должность':
+                    admin_delete_position()
             window_admin.close()
 
         # запуск окна пользователя (физ. лица)
