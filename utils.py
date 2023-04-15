@@ -98,9 +98,11 @@ def position_delete_helper(id_pos):
         if event == 'Назначить':
             conn = sqlite3.connect('Cleaning_Company.db')
             c = conn.cursor()
+            print(values['-POS-'])
             c.execute('SELECT * FROM Positions WHERE Naming=?',
                       (values['-POS-'],))
-            new_id = c.fetchone()[1]
+            print(c.fetchone())
+            new_id = c.fetchone()[0]
             new_sal = c.fetchone()[2]
             c.execute('UPDATE Employees SET ID_Positions=?, Salary=? WHERE Passport_SN=?',
                       (new_id, new_sal, values['-EMP-']))

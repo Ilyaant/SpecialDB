@@ -174,7 +174,7 @@ def admin_delete_position():
 
     id_pos = None
 
-    window = sg.Window('Редактировать должность', layout)
+    window = sg.Window('Удалить должность', layout)
     while True:
         event, values = window.read()
         if event == 'Отмена' or event == sg.WINDOW_CLOSED:
@@ -190,13 +190,22 @@ def admin_delete_position():
             ans = sg.popup_yes_no(
                 'Действительно удалить должность?', title='Подтверждение')
             if ans == 'Yes':
-                # conn = sqlite3.connect('Cleaning_Company.db')
-                # c = conn.cursor()
-                # c.execute('UPDATE Employees SET ')
-                # c.execute('DELETE FROM Positions WHERE ID=?', (id_pos,))
-                # conn.commit()
-                # conn.close()
-                position_delete_helper(id_pos)
+                conn = sqlite3.connect('Cleaning_Company.db')
+                c = conn.cursor()
+                c.execute('SELECT ID FROM Positions WHERE Naming=?',
+                          ('<Не назначено>',))
+                id_none = c.fetchone()[0]
+                c.execute(
+                    'SELECT Passport_SN FROM Employees WHERE ID_Positions=?', (id_pos,))
+                cand = []
+                for psn in c.fetchall():
+                    cand.append((id_none, 0, psn[0]))
+                c.executemany(
+                    'UPDATE Employees SET ID_Positions=?, Salary=? WHERE Passport_SN=?', cand)
+                c.execute('DELETE FROM Positions WHERE ID=?', (id_pos,))
+                conn.commit()
+                conn.close()
+                # position_delete_helper(id_pos)
                 sg.Popup('Удаление успешно', title='Успешно')
 
     window.close()

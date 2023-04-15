@@ -20,9 +20,9 @@ def admin_window():
         [sg.Button('Назначить сотрудника'), sg.Push(),
          sg.Button('Просмотреть заказы')],
         [sg.Push()],
-        [sg.Button('Редактировать сотрудника'),
+        [sg.Button('Редактировать сотрудника'), sg.Push(),
          sg.Button('Удалить сотрудника', button_color='red')],
-        [sg.Button('Редактировать должность'),
+        [sg.Button('Редактировать должность'), sg.Push(),
          sg.Button('Удалить должность', button_color='red')],
         [sg.Push(), sg.Button('Выйти')]
     ]
