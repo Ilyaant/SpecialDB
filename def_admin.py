@@ -43,31 +43,6 @@ def admin_add_service():
     window.close()
 
 
-# Функция для добавления нового типа работ
-def admin_add_work_type():
-    layout = [
-        [sg.Text('Название типа работ:')],
-        [sg.InputText(key='-WTNAME-')],
-        [sg.Button('Добавить'), sg.Push(), sg.Button('Отмена')]
-    ]
-
-    window = sg.Window('Добавить тип работ', layout)
-    while True:
-        event, values = window.read()
-        if event == 'Отмена' or event == sg.WINDOW_CLOSED:
-            break
-
-        if event == 'Добавить':
-            conn = sqlite3.connect('Cleaning_Company.db')
-            c = conn.cursor()
-            c.execute(
-                'INSERT INTO Work_Types (Naming) VALUES (?)', (values['-WTNAME-'],))
-            conn.commit()
-            conn.close()
-            break
-    window.close()
-
-
 # Функция для добавления новой должности
 def admin_add_position():
     layout = [
@@ -205,7 +180,6 @@ def admin_delete_position():
                 c.execute('DELETE FROM Positions WHERE ID=?', (id_pos,))
                 conn.commit()
                 conn.close()
-                # position_delete_helper(id_pos)
                 sg.Popup('Удаление успешно', title='Успешно')
 
     window.close()
@@ -249,6 +223,7 @@ def admin_add_worker():
 
         if event == 'Добавить':
             try:
+                check_psn = 1 / int(len(str(values['-PASSPORTSN-'])) == 10)
                 conn = sqlite3.connect('Cleaning_Company.db')
                 c = conn.cursor()
                 id_pos = None

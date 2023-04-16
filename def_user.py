@@ -35,6 +35,7 @@ def register_ind():
             break
         if event == 'Зарегистрироваться':
             try:
+                check_psn = 1 / int(len(str(values['-PASSPORTSN-'])) == 10)
                 ind = (
                     int(values['-PASSPORTSN-']),
                     str(values['-FNAME-']),
@@ -486,8 +487,16 @@ def user_give_feedback():
             break
 
         if event == 'Оставить отзыв':
-            rdb.set(values['-ORDNUM-'], [values['-CR1-'], values['-COMM-']])
-            rdb.dump()
-            sg.Popup('Отзыв оставлен успешно, спасибо!', title='Успешно')
+            try:
+                User = Query()
+                num = int(values['-ORDNUM-'])
+                n = ord_db.search(User.num == num)[0]
+            except:
+                sg.Popup('Ошибка. Проверьте введенные данные', title='Ошибка')
+            else:
+                rdb.set(values['-ORDNUM-'],
+                        [values['-CR1-'], values['-COMM-']])
+                rdb.dump()
+                sg.Popup('Отзыв оставлен успешно, спасибо!', title='Успешно')
 
     window.close()
