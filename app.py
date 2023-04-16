@@ -19,6 +19,7 @@ def admin_window():
          sg.Button('Просмотреть услуги')],
         [sg.Button('Назначить сотрудника'), sg.Push(),
          sg.Button('Просмотреть заказы')],
+        [sg.Button('Посмотреть отзывы')],
         [sg.Push()],
         [sg.Button('Редактировать сотрудника'), sg.Push(),
          sg.Button('Удалить сотрудника', button_color='red')],
@@ -95,6 +96,8 @@ while True:
                     admin_edit_position()
                 if event_a == 'Удалить должность':
                     admin_delete_position()
+                if event_a == 'Посмотреть отзывы':
+                    admin_see_feedback()
             window_admin.close()
 
         # запуск окна пользователя (физ. лица)

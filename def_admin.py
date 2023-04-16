@@ -717,3 +717,55 @@ def admin_assign_worker():
                 res = res
                 window['-ORD-'].update(res)
     window.close()
+
+
+def admin_see_feedback():
+    orders = []
+    for k in rdb.getall():
+        orders.append(int(k))
+    res = ''
+    for num in orders:
+        User = Query()
+        search = ord_db.search(User.num == num)[0]
+        address = search['address']
+        square = search['square']
+        wrk = search['wrk']
+        conn = sqlite3.connect('Cleaning_Company.db')
+        c = conn.cursor()
+        c.execute(
+            'SELECT F_Name, S_Name, L_Name FROM Employees WHERE Passport_SN=?', (wrk,))
+        emp = c.fetchone()
+        lname = emp[2]
+        fname = emp[0]
+        sname = emp[1]
+        conn.close()
+        s1 = search['S1']
+        d1 = search['D1']
+        t1 = search['T1']
+        s2 = search['S2']
+        d2 = search['D2']
+        t2 = search['T2']
+        s3 = search['S3']
+        d3 = search['D3']
+        t3 = search['T3']
+        res += f'Заказ {num}\n{address}, {square} кв. м\n'
+        res += f'Исполнитель: {lname} {fname} {sname}, {wrk}\n'
+        res += f'Услуга 1: {s1}, {d1}, {t1}\n'
+        if s2 != '':
+            res += f'Услуга 2: {s2}, {d2}, {t2}\n'
+            if s3 != '':
+                res += f'Услуга 3: {s3}, {d3}, {t3}\n'
+        res += f'Оценка {rdb.get(str(num))[0]}\nКомментарий:\n{rdb.get(str(num))[1]}\n\n'
+
+    layout = [
+        [sg.Text('Отзывы по выполненным заказам:')],
+        [sg.Multiline(key='-FB-', size=(50, 5), default_text=res)],
+        [sg.Push(), sg.Button('Закрыть')]
+    ]
+
+    window = sg.Window('Просмотр отзывов', layout)
+    while True:
+        event, values = window.read()
+        if event == 'Закрыть' or event == sg.WINDOW_CLOSED:
+            break
+    window.close()
