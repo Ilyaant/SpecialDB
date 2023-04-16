@@ -21,62 +21,29 @@ def worker_window(login):
                        layout_worker, finalize=True)
 
     res = ''
-    conn = sqlite3.connect('Cleaning_Company.db')
-    c = conn.cursor()
-    c.execute(
-        'SELECT ID_Entities FROM Employees_Entities WHERE Passport_SN_Employees=?', (login,))
-    c1 = c.fetchall()
-    for row in c1:
-        c.execute('SELECT * FROM Entities WHERE ID=?', (row[0],))
-        entity = c.fetchone()
-        name_ent = entity[1]
-        sq_ent = entity[2]
-        add_ent = entity[3]
-        User = Query()
-        search = ord_db.search(User.id == row[0])
-        for s in search:
-            num = s['num']
-            s1 = s['S1']
-            d1 = s['D1']
-            t1 = s['T1']
-            s2 = s['S2']
-            d2 = s['D2']
-            t2 = s['T2']
-            s3 = s['S3']
-            d3 = s['D3']
-            t3 = s['T3']
-            if s['status'] == 'not completed':
-                res += f'Заказ {num}\n{name_ent}, {add_ent}, {sq_ent} кв. м\nУслуга 1: {s1}, {d1}, {t1}\nУслуга 2: {s2}, {d2}, {t2}\nУслуга 3: {s3}, {d3}, {t3}\n\n'
-    c.execute(
-        'SELECT Passport_SN_Individuals FROM Employees_Individuals WHERE Passport_SN_Employees=?', (login,))
-    c2 = c.fetchall()
-    for row in c2:
-        c.execute(
-            'SELECT * FROM Individuals WHERE Passport_SN=?', (row[0],))
-        individual = c.fetchone()
-        fname_ind = individual[1]
-        sname_ind = individual[2]
-        lname_ind = individual[3]
-        sq_ind = individual[5]
-        add_ind = individual[4]
-        User = Query()
-        search = ord_db.search(User.id == row[0])
-        for s in search:
-            num = s['num']
-            s1 = s['S1']
-            d1 = s['D1']
-            t1 = s['T1']
-            s2 = s['S2']
-            d2 = s['D2']
-            t2 = s['T2']
-            s3 = s['S3']
-            d3 = s['D3']
-            t3 = s['T3']
-            if s['status'] == 'not completed':
-                res += f'Заказ {num}\n{lname_ind} {fname_ind} {sname_ind}, {add_ind}, {sq_ind} кв. м\nУслуга 1: {s1}, {d1}, {t1}\nУслуга 2: {s2}, {d2}, {t2}\nУслуга 3: {s3}, {d3}, {t3}\n\n'
-    res = res[:-4:]
+    User = Query()
+    search = ord_db.search(User.wrk == int(login))
+    for s in search:
+        sq = s['square']
+        add = s['address']
+        num = s['num']
+        s1 = s['S1']
+        d1 = s['D1']
+        t1 = s['T1']
+        s2 = s['S2']
+        d2 = s['D2']
+        t2 = s['T2']
+        s3 = s['S3']
+        d3 = s['D3']
+        t3 = s['T3']
+        if s['status'] == 'assigned':
+            res += f'Заказ {num}\n{add}, {sq} кв. м\nУслуга 1: {s1}, {d1}, {t1}\n'
+            if s2 != '':
+                res += f'Услуга 2: {s2}, {d2}, {t2}\n'
+                if s3 != '':
+                    res += f'Услуга 3: {s3}, {d3}, {t3}\n'
+            res += '\n'
     window['-ASSIGN-'].update(res)
-    conn.close()
 
     while True:
         event, values = window.read()

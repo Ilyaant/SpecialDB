@@ -182,8 +182,8 @@ def user_create_order_ind(login):
                     'Договор оказания услуг',
                     str(date.today()),
                     id_order,
-                    str(date.today()),  # TODO
-                    str(date.today())  # TODO
+                    str(date.today()),
+                    str(date.today())
                 )
                 c.execute(
                     'INSERT INTO Contracts (Passport_SN_Individuals, C_Name, Sign_Date, Number_Orders, Date_Start, Date_End) values (?,?,?,?,?,?)', contract)
@@ -198,6 +198,9 @@ def user_create_order_ind(login):
                 c.execute(
                     'SELECT Room_Square FROM Individuals WHERE Passport_SN=?', (udb.get(login)[1],))
                 square = int(c.fetchone()[0])
+                c.execute(
+                    'SELECT I_Address FROM Individuals WHERE Passport_SN=?', (udb.get(login)[1],))
+                address = c.fetchone()[0]
                 c.execute(
                     'SELECT Cost_m2 FROM C_Services WHERE Naming=?', (values['-S1-'],))
                 cost += square * int(c.fetchone()[0])
@@ -255,7 +258,10 @@ def user_create_order_ind(login):
                     'S2': values['-S2-'], 'D2': values['-D2-'], 'T2': values['-T2-'] + ':00',
                     'S3': values['-S3-'], 'D3': values['-D3-'], 'T3': values['-T3-'] + ':00',
                     'num': id_order,
+                    'square': square,
+                    'address': address,
                     'cost': cost,
+                    'wrk': 0,
                     'status': 'not completed'
                 })
             else:
@@ -353,6 +359,9 @@ def user_create_order_ent(login):
                     'SELECT Square_Offices FROM Entities WHERE ID=?', (id_ent,))
                 square = int(c.fetchone()[0])
                 c.execute(
+                    'SELECT E_Address FROM Entities WHERE ID=?', (id_ent,))
+                address = c.fetchone()[0]
+                c.execute(
                     'SELECT Cost_m2 FROM C_Services WHERE Naming=?', (values['-S1-'],))
                 cost += square * int(c.fetchone()[0])
                 window['-COST-'].update(f'{cost} руб.')
@@ -409,7 +418,10 @@ def user_create_order_ent(login):
                     'S2': values['-S2-'], 'D2': values['-D2-'], 'T2': values['-T2-'] + ':00',
                     'S3': values['-S3-'], 'D3': values['-D3-'], 'T3': values['-T3-'] + ':00',
                     'num': id_order,
+                    'square': square,
+                    'address': address,
                     'cost': cost,
+                    'wrk': 0,
                     'status': 'not completed'
                 })
             else:

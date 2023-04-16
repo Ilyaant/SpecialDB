@@ -708,6 +708,7 @@ def admin_assign_worker():
 
                 User = Query()
                 ord_db.update({'status': 'assigned'}, User.num == num)
+                ord_db.update({'wrk': psn}, User.num == num)
                 res = ''
                 User = Query()
                 search = ord_db.search(User.status == 'not completed')
