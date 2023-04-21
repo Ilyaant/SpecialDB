@@ -35,7 +35,7 @@ def register_ind():
             break
         if event == 'Зарегистрироваться':
             try:
-                check_psn = 1 / int(len(str(values['-PASSPORTSN-'])) == 10)
+                # check_psn = 1 / int(len(str(values['-PASSPORTSN-'])) == 10)
                 ind = (
                     int(values['-PASSPORTSN-']),
                     str(values['-FNAME-']),

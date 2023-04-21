@@ -223,7 +223,7 @@ def admin_add_worker():
 
         if event == 'Добавить':
             try:
-                check_psn = 1 / int(len(str(values['-PASSPORTSN-'])) == 10)
+                # check_psn = 1 / int(len(str(values['-PASSPORTSN-'])) == 10)
                 conn = sqlite3.connect('Cleaning_Company.db')
                 c = conn.cursor()
                 id_pos = None
